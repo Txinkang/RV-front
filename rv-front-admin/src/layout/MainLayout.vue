@@ -17,10 +17,7 @@
         :default-active="activeMenu"
         @select="handleMenuSelect"
       >
-        <el-menu-item index="/booking-vehicle">预定车辆</el-menu-item>
-        <el-menu-item index="/booking-camp">预定营地</el-menu-item>
-        <el-menu-item index="/upload">上传信息</el-menu-item>
-        <el-menu-item index="/user">我的</el-menu-item>
+        <el-menu-item index="/user">管理端</el-menu-item>
       </el-menu>
   
       <!-- 内容区域 -->
@@ -29,7 +26,8 @@
           <keep-alive>
             <component :is="Component" />
           </keep-alive>
-        </router-view>      </div>
+        </router-view>      
+      </div>
     </div>
   </template>
   
@@ -38,7 +36,7 @@
   import { User } from '@element-plus/icons-vue'
   import { useRouter, useRoute } from "vue-router";
   import { useUserStore } from '@/store/user.js'
-  import { userApi } from '@/api/user/user.js'
+  import userApi from '/Users/tangxinkang/Projects/RV/RV-front/rv-front-admin/src/api/user.js'
   import { errorHandler } from '@/utils/errorHandler.js'
   import { ElMessageBox, ElMessage } from 'element-plus'
 
@@ -52,7 +50,8 @@
     () => route.path,
     (newPath) => {
       activeMenu.value = newPath;
-    }
+    },
+    { immediate: true }
   );
   function handleMenuSelect(index) {
   router.push(index);

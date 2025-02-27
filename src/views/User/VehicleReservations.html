@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>高德地图密钥测试</title>
+  <script type="text/javascript">
+    window._AMapSecurityConfig = {
+      securityJsCode: "789434031b1146b2414b347035486ff0",
+    };
+  </script>
+  <script
+    type="text/javascript"
+    src="https://webapi.amap.com/maps?v=2.0&key=b75aa868fe25e53757df065259d48f9c"
+  ></script>  <style>
+    #container {width:400px; height:300px;}
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div id="result"></div>
+  <script>
+    // 测试地图加载
+    var map = new AMap.Map('container', {
+      zoom: 11,
+      center: [116.397428, 39.90923]
+    });
+    
+    // 测试逆地理编码
+    var geocoder = new AMap.Geocoder();
+    geocoder.getAddress([116.397428, 39.90923], function(status, result) {
+      document.getElementById('result').innerHTML = 
+        '状态: ' + status + '<br>' + 
+        '结果: ' + JSON.stringify(result);
+    });
+  </script>
+</body>
+</html>

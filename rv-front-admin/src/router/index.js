@@ -3,17 +3,12 @@ import MainLayout from '../layout/MainLayout.vue'
 import BookingVehicle from '../views/Vehicle/BookingVehicle.vue'
 import Login from '../views/Login/Login.vue'
 import BookingCamp from '../views/Camp/BookingCamp.vue'
-import Upload from '../views/Upload/Upload.vue'
 import User from '../views/User/User.vue'
-import CampReservations from '../views/User/CampReservations.vue'
-import VehicleReservations from '../views/User/VehicleReservations.vue'
 import CampInfo from '../views/User/CampInfo.vue'
 import VehicleInfo from '../views/User/VehicleInfo.vue'
-import PersonalInfo from '../views/User/PersonalInfo.vue'
-import OrderManagement from '../views/User/OrderManagement.vue'
-import UsageIssues from '../views/User/UsageIssues.vue'
-import Feedback from '../views/User/Feedback.vue'
-
+import CampAudit from '../views/User/CampAudit.vue'
+import VehicleAudit from '../views/User/VehicleAudit.vue'
+import DataAnalyze from '../views/User/DataAnalyze.vue'
 const routes = [
   {
     path: '/login',
@@ -36,28 +31,11 @@ const routes = [
         component: BookingCamp
       },
       {
-        path: '/upload',
-        name: 'upload',
-        component: Upload
-      },
-      {
         path: '/user',
         name: 'user',
         component: User,
-        redirect: '/user/camp-reservations',
+        redirect: '/user/camp-info',
         children: [
-          {
-            path: 'camp-reservations',
-            name: 'camp-reservations',
-            component: CampReservations,
-            meta: { title: '已预定营地' }
-          },
-          {
-            path: 'vehicle-reservations',
-            name: 'vehicle-reservations',
-            component: VehicleReservations,
-            meta: { title: '已预定车辆' }
-          },
           {
             path: 'camp-info',
             name: 'camp-info',
@@ -71,30 +49,23 @@ const routes = [
             meta: { title: '车辆信息' }
           },
           {
-            path: 'personal-info',
-            name: 'personal-info',
-            component: PersonalInfo,
-            meta: { title: '个人信息' }
+            path: 'camp-audit',
+            name: 'camp-audit',
+            component: CampAudit,
+            meta: { title: '营地审核' }
           },
           {
-            path: 'order-management',
-            name: 'order-management',
-            component: OrderManagement,
-            meta: { title: '订单管理' }
+            path: 'vehicle-audit',
+            name: 'vehicle-audit',
+            component: VehicleAudit,
+            meta: { title: '车辆审核' }
           },
           {
-            path: 'usage-issues',
-            name: 'usage-issues',
-            component: UsageIssues,
-            meta: { title: '使用问题' }
+            path: 'data-analyze',
+            name: 'data-analyze',
+            component: DataAnalyze,
+            meta: { title: '数据分析' }
           },
-          {
-            path: 'feedback',
-            name: 'feedback',
-            component: Feedback,
-            meta: { title: '反馈' }
-          },
-          
         ]
       }
     ]
@@ -116,12 +87,12 @@ router.beforeEach((to, from, next) => {
 
   // 如果访问登录页且已登录，重定向到预定车辆页
   if ((to.path === '/login' || to.path === '/register') && isTokenValid) {
-    next('/booking-vehicle')
+    next('/user/camp-reservations')
     return
   }
 
   // 如果路由是登录页,注册页，直接放行
-  if (to.path === '/login' || to.path === '/register' || to.path === '/booking-vehicle' || to.path === '/booking-camp') {
+  if (to.path === '/login' || to.path === '/register') {
     next()
     return
   }
