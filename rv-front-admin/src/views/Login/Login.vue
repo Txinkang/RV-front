@@ -68,7 +68,7 @@
         if (response.code === 200) {
             // 存储用户信息到本地
             userStore.setUserInfo(response.data)
-            router.replace("/booking-vehicle")
+            router.replace("/user")
             console.log("账号登录成功,响应数据：", response);
         }else if(response.code === 405){
             errorHandler.showError('密码错误', response)

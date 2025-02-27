@@ -1,8 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainLayout from '../layout/MainLayout.vue'
-import BookingVehicle from '../views/Vehicle/BookingVehicle.vue'
 import Login from '../views/Login/Login.vue'
-import BookingCamp from '../views/Camp/BookingCamp.vue'
 import User from '../views/User/User.vue'
 import CampInfo from '../views/User/CampInfo.vue'
 import VehicleInfo from '../views/User/VehicleInfo.vue'
@@ -18,18 +16,8 @@ const routes = [
   {
     path: '/',
     component: MainLayout,
-    redirect: '/booking-vehicle',
+    redirect: '/user',
     children: [
-      {
-        path: '/booking-vehicle',
-        name: 'booking-vehicle',
-        component: BookingVehicle
-      },
-      {
-        path: '/booking-camp',
-        name: 'booking-camp',
-        component: BookingCamp
-      },
       {
         path: '/user',
         name: 'user',
