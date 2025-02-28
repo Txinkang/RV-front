@@ -2,11 +2,19 @@
     <div class="main-layout">
       <!-- 头部区域 -->
       <div class="header">
-        <div class="title">房车在线租赁系统</div>
-        <div class="user-info">
-          <el-icon size="24"><User /></el-icon>
-          <span v-if="!isTokenValid" @click="router.replace('/login')">登录</span>
-          <el-button v-if="isTokenValid" type="danger" @click="handleLogout">退出登录</el-button>
+        <div class="header-content">
+          <div class="title">
+            <el-icon class="logo-icon"><Van /></el-icon>
+            房车在线租赁系统
+          </div>
+          <div class="user-info">
+            <el-icon size="20"><User /></el-icon>
+            <span v-if="!isTokenValid" class="login-text" @click="router.replace('/login')">登录</span>
+            <el-button v-if="isTokenValid" type="danger" size="small" plain @click="handleLogout">
+              <el-icon><SwitchButton /></el-icon>
+              退出登录
+            </el-button>
+          </div>
         </div>
       </div>
   
@@ -17,7 +25,10 @@
         :default-active="activeMenu"
         @select="handleMenuSelect"
       >
-        <el-menu-item index="/user">管理端</el-menu-item>
+        <el-menu-item index="/user">
+          <el-icon><Management /></el-icon>
+          <span>管理端</span>
+        </el-menu-item>
       </el-menu>
   
       <!-- 内容区域 -->
@@ -33,7 +44,7 @@
   
   <script setup>
   import { ref , watch} from 'vue'
-  import { User } from '@element-plus/icons-vue'
+  import { User, Van, Management, SwitchButton } from '@element-plus/icons-vue'
   import { useRouter, useRoute } from "vue-router";
   import { useUserStore } from '@/store/user.js'
   import userApi from '/Users/tangxinkang/Projects/RV/RV-front/rv-front-admin/src/api/user.js'
@@ -96,35 +107,88 @@
   <style scoped>
   .main-layout {
     min-height: 100vh;
+    background-color: #f5f7fa;
   }
   
   .header {
-    background-color: #409EFF;
-    height: 60px;
+    background: linear-gradient(135deg, #409EFF 0%, #2c5282 100%);
+    height: 64px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    height: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 20px;
+    padding: 0 24px;
     color: white;
   }
   
   .title {
     font-size: 24px;
-    font-weight: bold;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    letter-spacing: 0.5px;
+  }
+  
+  .logo-icon {
+    font-size: 28px;
   }
   
   .user-info {
     display: flex;
     align-items: center;
-    gap: 8px;
-    cursor: pointer;
+    gap: 12px;
+  }
+  
+  .login-text {
+    font-size: 14px;
+    transition: all 0.3s ease;
+  }
+  
+  .login-text:hover {
+    opacity: 0.8;
+    text-decoration: underline;
   }
   
   .nav-menu {
-    border-bottom: solid 1px #e6e6e6;
+    background-color: white;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    padding: 0 24px;
+  }
+  
+  .nav-menu :deep(.el-menu-item) {
+    height: 56px;
+    line-height: 56px;
+    font-size: 15px;
+  }
+  
+  .nav-menu :deep(.el-menu-item.is-active) {
+    font-weight: 600;
+  }
+  
+  .nav-menu :deep(.el-icon) {
+    margin-right: 8px;
+    font-size: 18px;
   }
   
   .content {
-    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+    min-height: calc(100vh - 120px);
+  }
+  
+  :deep(.el-button--small) {
+    padding: 8px 16px;
+  }
+  
+  :deep(.el-button--small .el-icon) {
+    margin-right: 4px;
   }
   </style>

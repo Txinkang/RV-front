@@ -1,80 +1,187 @@
 <template>
   <div class="personal-info">
-    <h2>个人信息</h2>
-    <div class="content-placeholder">
-      <el-form :model="userDisplay" label-width="80px" class="user-form">
-        <el-form-item label="用户名">
-          <el-input v-model="userDisplay.userName" :disabled="!isEditing"></el-input>
-        </el-form-item>
-        <el-form-item label="邮箱">
-          <el-input v-model="userDisplay.userEmail" :disabled="!isEditing"></el-input>
-        </el-form-item>
-        <el-form-item label="手机号">
-          <el-input v-model="userDisplay.userPhoneNumber" :disabled="!isEditing"></el-input>
-        </el-form-item>
-        <el-form-item label="积分">
-          <el-input v-model="userDisplay.userPoints" disabled></el-input>
-        </el-form-item>
-        <el-form-item label="密码">
-          <el-button type="primary" size="small" @click="handleChangePasswordDialog">修改密码</el-button>
-        </el-form-item>
-        <el-form-item label="角色">
-          <span style="width: 100px;margin-right: 10px;" v-if="userDisplay.userRole === 0">普通用户</span>
-          <span style="width: 100px;margin-right: 10px;" v-else-if="userDisplay.userRole === 1">商家用户</span>
-          <el-button v-if="userDisplay.userRole === 0" type="primary" size="small" @click="handleUpgradeRole">升级</el-button>
-        </el-form-item>
-        <el-form-item label="余额">
-          <el-input style="width: 100px;margin-right: 10px;" v-model="userDisplay.userBalance" disabled></el-input>
-          <el-button type="primary" size="small" @click="handleRechargeDialog">充值</el-button>
-        </el-form-item>
-        <el-form-item>
-          <template #label>
-            <el-button type="primary" @click="handleEdit">编辑</el-button>
-          </template>
-          <el-button v-if="isEditing" @click="handleConfirm">确认</el-button>
-          <el-button v-if="isEditing" @click="handleCancel">取消</el-button>
-        </el-form-item>
-      </el-form>
+    <div class="page-header">
+      <div class="header-left">
+        <el-icon><User /></el-icon>
+        <h2>个人信息</h2>
+      </div>
     </div>
-    <!-- 充值弹窗 -->
+
+    <div class="content-wrapper">
+      <el-card shadow="hover" class="info-card">
+        <el-form :model="userDisplay" label-width="100px" class="user-form">
+          <div class="form-header">
+            <el-avatar :size="80" class="user-avatar">
+              <el-icon><UserFilled /></el-icon>
+            </el-avatar>
+            <div class="user-role">
+              <el-tag :type="userDisplay.userRole === 1 ? 'success' : 'info'" effect="light">
+                <el-icon><Shop v-if="userDisplay.userRole === 1" /></el-icon>
+                <el-icon><User v-if="userDisplay.userRole === 0" /></el-icon>
+                {{ userDisplay.userRole === 1 ? '商家用户' : '普通用户' }}
+              </el-tag>
+            </div>
+          </div>
+
+          <el-form-item label="用户名">
+            <el-input 
+              v-model="userDisplay.userName" 
+              :disabled="!isEditing"
+              :prefix-icon="User"
+            />
+          </el-form-item>
+
+          <el-form-item label="邮箱">
+            <el-input 
+              v-model="userDisplay.userEmail" 
+              :disabled="!isEditing"
+              :prefix-icon="Message"
+            />
+          </el-form-item>
+
+          <el-form-item label="手机号">
+            <el-input 
+              v-model="userDisplay.userPhoneNumber" 
+              :disabled="!isEditing"
+              :prefix-icon="Phone"
+            />
+          </el-form-item>
+
+          <el-form-item label="积分">
+            <el-input 
+              v-model="userDisplay.userPoints" 
+              disabled
+              :prefix-icon="Star"
+            >
+              <template #append>积分</template>
+            </el-input>
+          </el-form-item>
+
+          <el-form-item label="余额">
+            <div class="balance-wrapper">
+              <el-input 
+                v-model="userDisplay.userBalance" 
+                disabled
+                :prefix-icon="Wallet"
+              >
+                <template #prepend>¥</template>
+              </el-input>
+              <el-button type="primary" @click="handleRechargeDialog">
+                <el-icon><Plus /></el-icon>
+                充值
+              </el-button>
+            </div>
+          </el-form-item>
+
+          <el-form-item label="账户安全">
+            <el-button type="warning" @click="handleChangePasswordDialog">
+              <el-icon><Lock /></el-icon>
+              修改密码
+            </el-button>
+          </el-form-item>
+
+          <el-form-item label="账户类型" v-if="userDisplay.userRole === 0">
+            <el-button type="primary" @click="handleUpgradeRole">
+              <el-icon><Promotion /></el-icon>
+              升级为商家
+            </el-button>
+          </el-form-item>
+
+          <el-form-item>
+            <div class="edit-buttons">
+              <el-button type="primary" @click="handleEdit" v-if="!isEditing">
+                <el-icon><Edit /></el-icon>
+                编辑资料
+              </el-button>
+              <template v-else>
+                <el-button type="success" @click="handleConfirm">
+                  <el-icon><Check /></el-icon>
+                  确认
+                </el-button>
+                <el-button @click="handleCancel">
+                  <el-icon><Close /></el-icon>
+                  取消
+                </el-button>
+              </template>
+            </div>
+          </el-form-item>
+        </el-form>
+      </el-card>
+    </div>
+
+    <!-- 充值对话框 -->
     <el-dialog 
-    v-model="rechargeDialog" 
-    title="充值" width="30%" 
-    @close="handleRechargeDialogClose"
-    style="height: 200px;"
+      v-model="rechargeDialog" 
+      title="账户充值" 
+      width="400px"
+      class="recharge-dialog"
     >
-      <el-input-number 
-        v-model="rechargeAmount" 
-        placeholder="请输入充值金额" 
-        style="width: 300px;margin-right: 10px;"
-        :min="0.01"
-        :max="100000000"
-        clearable
-      />
-      <el-button type="primary" @click="handleRecharge">充值</el-button>
+      <div class="recharge-content">
+        <el-input-number 
+          v-model="rechargeAmount" 
+          :min="0.01"
+          :max="100000000"
+          :precision="2"
+          :step="100"
+          placeholder="请输入充值金额"
+          class="recharge-input"
+        >
+          <template #prefix>¥</template>
+        </el-input-number>
+      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="handleRechargeDialogClose">取消</el-button>
+          <el-button type="primary" @click="handleRecharge">
+            <el-icon><Wallet /></el-icon>
+            确认充值
+          </el-button>
+        </div>
+      </template>
     </el-dialog>
-    <!-- 修改密码弹窗 -->
+
+    <!-- 修改密码对话框 -->
     <el-dialog 
       v-model="changePasswordDialog" 
       title="修改密码" 
-      width="30%"
-      @close="handleChangePasswordDialogClose"
-      style="height: 300px;"
-      >
-      <el-form :model="changePasswordForm" label-width="80px" class="change-password-form">
+      width="400px"
+      class="password-dialog"
+    >
+      <el-form :model="changePasswordForm" class="password-form">
         <el-form-item label="旧密码">
-          <el-input v-model="changePasswordForm.oldPassword" placeholder="请输入旧密码"></el-input>
+          <el-input 
+            v-model="changePasswordForm.oldPassword" 
+            type="password"
+            show-password
+            :prefix-icon="Lock"
+          />
         </el-form-item>
         <el-form-item label="新密码">
-          <el-input v-model="changePasswordForm.newPassword" placeholder="请输入新密码"></el-input>
+          <el-input 
+            v-model="changePasswordForm.newPassword" 
+            type="password"
+            show-password
+            :prefix-icon="Key"
+          />
         </el-form-item>
         <el-form-item label="确认密码">
-          <el-input v-model="changePasswordForm.confirmPassword" placeholder="请确认新密码"></el-input>
-        </el-form-item>
-        <el-form-item>  
-          <el-button type="primary" @click="handleChangePassword">修改</el-button>
+          <el-input 
+            v-model="changePasswordForm.confirmPassword" 
+            type="password"
+            show-password
+            :prefix-icon="Key"
+          />
         </el-form-item>
       </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="handleChangePasswordDialogClose">取消</el-button>
+          <el-button type="primary" @click="handleChangePassword">
+            <el-icon><Check /></el-icon>
+            确认修改
+          </el-button>
+        </div>
+      </template>
     </el-dialog>
   </div>
 </template>
@@ -85,6 +192,12 @@ import {errorHandler} from "../../utils/errorHandler.js";
 import { userApi } from '../../api/user/user.js'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import router from "../../router/index.js";
+import {
+  User, UserFilled, Message, Phone, Star, 
+  Wallet, Lock, Key, Edit, Check, Close,
+  Plus, Promotion, Shop
+} from '@element-plus/icons-vue'
+
 const isEditing = ref(false);
 const userForm = ref({
   userName: null,
@@ -261,8 +374,106 @@ onMounted(async () => {
   padding: 20px;
 }
 
-.content-placeholder {
-  margin-top: 20px;
-  min-height: 300px;
+.page-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-left h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.content-wrapper {
+  background-color: #f5f7fa;
+  border-radius: 8px;
+  min-height: calc(100vh - 180px);
+  padding: 20px;
+}
+
+.info-card {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.form-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.user-avatar {
+  background-color: #409EFF;
+  margin-bottom: 16px;
+}
+
+.user-role {
+  margin-top: 8px;
+}
+
+.balance-wrapper {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.edit-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.recharge-content {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.recharge-input {
+  width: 100%;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 20px;
+}
+
+:deep(.el-input-number) {
+  width: 100%;
+}
+
+:deep(.el-form-item) {
+  margin-bottom: 22px;
+}
+
+:deep(.el-button) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+:deep(.el-tag) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+}
+
+.recharge-dialog,
+.password-dialog {
+  :deep(.el-dialog__body) {
+    padding: 20px 30px;
+  }
 }
 </style> 

@@ -62,5 +62,13 @@ export const campApi = {
             method: 'delete',
             data: data
         })
+    },
+    // 确认归还营地信息
+    returnCamp(data){
+        return request({
+            url: '/business/returnCamp',
+            method: 'post',
+            data: data
+        })
     }
 }

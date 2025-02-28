@@ -1,82 +1,176 @@
 <template>
   <div class="camp-info">
-    <h2>营地信息</h2>
-    <el-button type="primary" @click="handleSearch">查看</el-button>
-    <div class="content-placeholder">
+    <div class="page-header">
+      <div class="header-left">
+        <el-icon><Location /></el-icon>
+        <h2>营地信息</h2>
+      </div>
+      <el-button type="primary" @click="handleSearch">
+        <el-icon><Search /></el-icon>
+        刷新数据
+      </el-button>
+    </div>
+
+    <div class="content-wrapper" v-loading="loading">
       <!-- 表格 -->
-      <div style="overflow-x: auto;">
+      <el-card shadow="hover" class="table-card">
         <el-table 
-        :data="campCurrentPageData" 
-        style="width: 1000px" 
-        border>
-          <el-table-column label="营地名称" min-width="120px">
-              <template #default="{ row }">
-                {{ row.campgroundName }}
-              </template>
+          :data="campCurrentPageData" 
+          style="width: 100%" 
+          border
+          class="camp-table"
+        >
+          <el-table-column label="营地名称" min-width="120">
+            <template #default="{ row }">
+              <span class="camp-name">{{ row.campgroundName }}</span>
+            </template>
           </el-table-column>
-          <el-table-column label="营地图片" min-width="120px">
+
+          <el-table-column label="营地图片" min-width="150">
             <template #default="{ row }">
               <el-carousel 
                 v-if="getImages(row.campgroundPicture).length"
-                height="100px"
+                height="120px"
                 indicator-position="none"
+                trigger="click"
+                class="image-carousel"
               >
                 <el-carousel-item v-for="image in getImages(row.campgroundPicture)" :key="image">
                   <el-image 
                     :src="getCampImageUrl(image)" 
-                    style="width: 100px; height: 100px;" 
                     fit="cover"
+                    class="camp-image"
+                    :preview-src-list="getImages(row.campgroundPicture).map(img => getCampImageUrl(img))"
                   />
                 </el-carousel-item>
               </el-carousel>
             </template>
           </el-table-column>
-          <el-table-column label="营地价格" min-width="120px">
-              <template #default="{ row }">
-                {{ row.campgroundPrice }}
-              </template>
-          </el-table-column>  
-          <el-table-column label="营地地址" min-width="120px">
-              <template #default="{ row }">
+
+          <el-table-column label="营地价格" min-width="120">
+            <template #default="{ row }">
+              <span class="price">¥ {{ row.campgroundPrice }}</span>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="营地地址" min-width="180">
+            <template #default="{ row }">
+              <div class="location-info">
+                <el-icon><MapLocation /></el-icon>
                 {{ row.campgroundLocation }}
-              </template>
+              </div>
+            </template>
           </el-table-column>
-          <el-table-column label="营地描述" min-width="120px">
-              <template #default="{ row }">
-                {{ row.campgroundFacilityDetails }}
-              </template>
+
+          <el-table-column label="营地描述" min-width="200">
+            <template #default="{ row }">
+              <el-tooltip 
+                :content="row.campgroundFacilityDetails" 
+                placement="top" 
+                :hide-after="0"
+              >
+                <div class="description-text">
+                  {{ row.campgroundFacilityDetails }}
+                </div>
+              </el-tooltip>
+            </template>
           </el-table-column>
-          <el-table-column label="营地状态" min-width="120px">
-              <template #default="{ row }">
+
+          <el-table-column label="营地状态" min-width="120">
+            <template #default="{ row }">
+              <el-tag 
+                :type="getStatusType(row.campgroundStatus)"
+                effect="light"
+              >
                 {{ formatCampStatus(row.campgroundStatus) }}
-              </template>
+              </el-tag>
+            </template>
           </el-table-column>
-          <el-table-column label="操作" min-width="330px">
-              <template #default="{ row }">
-                <el-button type="primary" size="small" @click="handleUpdateClick(row.campgroundId)">修改</el-button>
-                <el-button type="warning" v-if="row.campgroundStatus !== 2" size="small" @click="handleMaintainClick(row.campgroundId)">维护</el-button>
-                <el-button type="warning" v-if="row.campgroundStatus === 2" size="small" @click="handleCancelMaintainClick(row.campgroundId)">取消维护</el-button>
-                <el-button type="warning" v-if="row.campgroundStatus === 2" size="small" @click="handleCompleteMaintainClick(row.campgroundId)">完成维护</el-button>
-                <el-button type="danger" size="small" @click="handleDeleteClick(row.campgroundId)">删除</el-button>
-              </template>
+
+          <el-table-column label="操作" min-width="330" fixed="right">
+            <template #default="{ row }">
+              <div class="action-buttons">
+                <el-button type="primary" size="small" @click="handleUpdateClick(row.campgroundId)">
+                  <el-icon><Edit /></el-icon>
+                  修改
+                </el-button>
+                <el-button 
+                  v-if="row.campgroundStatus !== 2" 
+                  type="warning" 
+                  size="small" 
+                  @click="handleMaintainClick(row.campgroundId)"
+                >
+                  <el-icon><Tools /></el-icon>
+                  维护
+                </el-button>
+                <el-button 
+                  v-if="row.campgroundStatus === 2" 
+                  type="success" 
+                  size="small" 
+                  @click="handleCompleteMaintainClick(row.campgroundId)"
+                >
+                  <el-icon><Select /></el-icon>
+                  完成维护
+                </el-button>
+                <el-button 
+                  v-if="row.campgroundStatus === 2" 
+                  type="info" 
+                  size="small" 
+                  @click="handleCancelMaintainClick(row.campgroundId)"
+                >
+                  <el-icon><Close /></el-icon>
+                  取消维护
+                </el-button>
+                <el-popconfirm
+                  title="确定要删除该营地吗？"
+                  @confirm="handleDeleteClick(row.campgroundId)"
+                >
+                  <template #reference>
+                    <el-button type="danger" size="small">
+                      <el-icon><Delete /></el-icon>
+                      删除
+                    </el-button>
+                  </template>
+                </el-popconfirm>
+              </div>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="确认归还" min-width="120" fixed="right">
+            <template #default="{ row }">
+              <el-button 
+                type="success" 
+                size="small" 
+                @click="handleReturnClick(row.campgroundId)"
+              >
+                <el-icon><Check /></el-icon>
+                确认归还
+              </el-button>
+            </template>
           </el-table-column>
         </el-table>
-      </div>  
-      
-      <!-- 分页 -->
-      <div>
-        <SmartPagination
-          v-model:current-page="campPagination.currentPage"
-          :server-page-size="campPagination.serverPageSize"
-          :display-page-size="campPagination.displayPageSize"
-          :total="campPagination.totalItems"
-          @load-data="handleCampLoadData" />
-      </div>
 
-      <!-- 修改营地信息 -->
-      <div>
-        <el-dialog title="修改营地信息" v-model="campUpdateDialogVisible" width="50%" @close="closeCampUpdateDialog">
-          <el-form :model="campForm" label-width="100px">
+        <!-- 分页 -->
+        <div class="pagination-wrapper">
+          <SmartPagination
+            v-model:current-page="campPagination.currentPage"
+            :server-page-size="campPagination.serverPageSize"
+            :display-page-size="campPagination.displayPageSize"
+            :total="campPagination.totalItems"
+            @load-data="handleCampLoadData" 
+          />
+        </div>
+      </el-card>
+
+      <!-- 修改营地信息对话框 -->
+      <el-dialog 
+        v-model="campUpdateDialogVisible" 
+        title="修改营地信息" 
+        width="50%" 
+        @close="closeCampUpdateDialog"
+        class="update-dialog"
+      >
+        <el-form :model="campForm" label-width="100px" class="update-form">
           <el-form-item label="营地名称" prop="name">
             <el-input v-model="campForm.name" placeholder="请输入营地名称"></el-input>
           </el-form-item>
@@ -113,28 +207,31 @@
             <el-button @click="closeCampUpdateDialog">取消</el-button>
           </el-form-item>
         </el-form>
-        </el-dialog>
-      </div>
+      </el-dialog>
 
-      <!-- 维护营地信息 -->
-      <div>
-        <el-dialog title="维护营地信息" v-model="campMaintainDialogVisible" width="50%" @close="closeCampMaintainDialog">
-          <el-form :model="campForm" label-width="100px">
-            <el-form-item label="维护信息" prop="maintenanceDetails">
-              <el-input 
-                type="textarea" 
-                v-model="campForm.maintenanceDetails" 
-                placeholder="请输入维护信息"
-                :autosize="{ minRows: 4, maxRows: 6 }"
-              />
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="maintainCamp">维护</el-button>
-              <el-button @click="closeCampMaintainDialog">取消</el-button>
-            </el-form-item>
-          </el-form>
-        </el-dialog>
-      </div>
+      <!-- 维护营地信息对话框 -->
+      <el-dialog 
+        v-model="campMaintainDialogVisible" 
+        title="维护营地信息" 
+        width="50%" 
+        @close="closeCampMaintainDialog"
+        class="maintain-dialog"
+      >
+        <el-form :model="campForm" label-width="100px" class="maintain-form">
+          <el-form-item label="维护信息" prop="maintenanceDetails">
+            <el-input 
+              type="textarea" 
+              v-model="campForm.maintenanceDetails" 
+              placeholder="请输入维护信息"
+              :autosize="{ minRows: 4, maxRows: 6 }"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="maintainCamp">维护</el-button>
+            <el-button @click="closeCampMaintainDialog">取消</el-button>
+          </el-form-item>
+        </el-form>
+      </el-dialog>
     </div>
   </div>
 </template>
@@ -309,6 +406,24 @@ const handleCancelMaintainClick = async (campgroundId) => {
     errorHandler.showError('营地信息取消维护失败', error)
   }
 }
+
+// 确认归还营地信息
+const handleReturnClick = async (campgroundId) => {
+  try{
+    const requestData = {
+      campgroundId: campgroundId
+    }
+    const res = await campApi.returnCamp(requestData)
+    if(res.code === 200){
+      ElMessage.success('营地信息确认归还成功')
+      handleSearch()
+    }else{
+      errorHandler.showError('营地信息确认归还失败', res)
+    }
+  }catch(error){
+    errorHandler.showError('营地信息确认归还失败', error)
+  }
+}
 //===============================分页========================================
 const campPagination = ref({
   currentPage: 1, // 当前页
@@ -405,14 +520,132 @@ const formatCampStatus = (status) => {
     return '已删除'
   }
 }
+
+// 获取状态标签类型
+const getStatusType = (status) => {
+  const statusMap = {
+    0: 'success',   // 可预定
+    1: 'warning',   // 租赁中
+    2: 'info',      // 维护中
+    3: 'primary',   // 审核中
+    4: 'danger',    // 审核失败
+    5: 'info'       // 已删除
+  }
+  return statusMap[status] || 'info'
+}
 </script>
+
 <style scoped>
 .camp-info {
   padding: 20px;
 }
 
-.content-placeholder {
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-left h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.content-wrapper {
+  background-color: #f5f7fa;
+  border-radius: 8px;
+  min-height: calc(100vh - 180px);
+}
+
+.table-card {
+  margin-bottom: 20px;
+}
+
+.camp-table {
+  margin-bottom: 20px;
+}
+
+.camp-name {
+  font-weight: 500;
+  color: #303133;
+}
+
+.image-carousel {
+  width: 120px;
+  margin: 0 auto;
+}
+
+.camp-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.price {
+  color: #f56c6c;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.location-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #606266;
+}
+
+.description-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  color: #606266;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
   margin-top: 20px;
-  min-height: 300px;
+}
+
+:deep(.el-table) {
+  --el-table-border-color: #e4e7ed;
+  --el-table-header-bg-color: #f5f7fa;
+}
+
+:deep(.el-button) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+:deep(.el-tag) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.update-dialog,
+.maintain-dialog {
+  :deep(.el-dialog__body) {
+    padding: 20px 30px;
+  }
 }
 </style> 

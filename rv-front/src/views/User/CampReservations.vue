@@ -1,38 +1,138 @@
 <template>
   <div class="camp-reservations">
-    <h2>已预定营地</h2>
-    <div class="content-placeholder">
-      <el-form :model="campReservations" label-width="80px" class="user-form">
-        <el-form-item label="营地名称">
-          <el-input v-model="campReservations.camp_name" :disabled="true"></el-input>
-        </el-form-item>
-        <el-form-item label="营地地址">
-          <el-input v-model="campReservations.camp_location" :disabled="true"></el-input>
-        </el-form-item>
-        <el-form-item label="开始时间">
-          <el-input v-model="campReservations.camp_start_date" :disabled="true"></el-input>
-        </el-form-item>
-        <el-form-item label="结束时间">
-          <el-input v-model="campReservations.camp_end_date" :disabled="true"></el-input>
-        </el-form-item>
-        <el-form-item label="总价">
-          <el-input v-model="campReservations.camp_total_price" :disabled="true"></el-input>
-        </el-form-item>
-        <el-form-item v-if="campReservations.camp_status === 0">
-          <el-button type="primary" @click="dialogVisible = true">付款</el-button>
-          <el-button type="danger" @click="handleCancel">取消</el-button>
-        </el-form-item>
-        <el-form-item v-if="campReservations.camp_status === 2">
-          <el-button type="primary" @click="handleRefund">退款</el-button>
-        </el-form-item>
+    <div class="page-header">
+      <el-icon><Calendar /></el-icon>
+      <h2>已预定营地</h2>
+    </div>
+
+    <div class="reservation-content" v-loading="loading">
+      <el-empty v-if="!hasReservation" description="暂无预订信息" />
+      
+      <el-form 
+        v-else
+        :model="campReservations" 
+        label-width="100px" 
+        class="reservation-form"
+      >
+        <el-descriptions :column="1" border>
+          <el-descriptions-item label="营地名称">
+            <el-tag size="large">
+              <el-icon><House /></el-icon>
+              {{ campReservations.camp_name }}
+            </el-tag>
+          </el-descriptions-item>
+          
+          <el-descriptions-item label="营地地址">
+            <div class="location-info">
+              <el-icon><Location /></el-icon>
+              {{ campReservations.camp_location }}
+            </div>
+          </el-descriptions-item>
+          
+          <el-descriptions-item label="开始时间">
+            <div class="time-info">
+              <el-icon><Timer /></el-icon>
+              {{ campReservations.camp_start_date }}
+            </div>
+          </el-descriptions-item>
+          
+          <el-descriptions-item label="结束时间">
+            <div class="time-info">
+              <el-icon><Timer /></el-icon>
+              {{ campReservations.camp_end_date }}
+            </div>
+          </el-descriptions-item>
+          
+          <el-descriptions-item label="总价">
+            <span class="price">¥ {{ campReservations.camp_total_price }}</span>
+          </el-descriptions-item>
+        </el-descriptions>
+
+        <div class="action-buttons">
+          <template v-if="campReservations.camp_status === 0">
+            <el-button type="primary" @click="dialogVisible = true">
+              <el-icon><Wallet /></el-icon>
+              付款
+            </el-button>
+            <el-button type="danger" @click="handleCancel">
+              <el-icon><Close /></el-icon>
+              取消预订
+            </el-button>
+          </template>
+          
+          <el-button 
+            v-if="campReservations.camp_status === 2"
+            type="warning" 
+            @click="handleRefund"
+          >
+            <el-icon><RefreshLeft /></el-icon>
+            申请退款
+          </el-button>
+        </div>
       </el-form>
     </div>
-    <el-dialog v-model="dialogVisible" title="租赁营地" width="30%">
-      <el-form :model="dialogForm" label-width="80px" class="user-form">
-        <el-form-item label="租赁合同">
-          <span>第一条 租赁内容
 
-甲方同意将其拥有的营地（以下简称“营地”）租赁给乙方使用，乙方同意按照合同约定的条件租赁该营地。
+    <el-dialog 
+      v-model="dialogVisible" 
+      title="租赁合同确认" 
+      width="50%"
+      class="rental-dialog"
+    >
+      <div class="contract-content">
+        <h3 class="contract-title">营地租赁合同</h3>
+        <el-scrollbar height="400px">
+          <div class="contract-text">
+            {{ contractText }}
+          </div>
+        </el-scrollbar>
+      </div>
+      
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false">
+            <el-icon><Close /></el-icon>
+            取消
+          </el-button>
+          <el-button type="primary" @click="handleRent">
+            <el-icon><Check /></el-icon>
+            确认租赁
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, computed } from 'vue';
+import { campApi } from '../../api/user/camp.js'
+import { ElMessage } from 'element-plus'
+import { errorHandler } from '../../utils/errorHandler.js'
+import { payApi } from '../../api/user/pay.js'
+import { 
+  Calendar, House, Location, Timer, Wallet, 
+  Close, RefreshLeft, Check 
+} from '@element-plus/icons-vue'
+
+const campReservations = ref({
+  camp_start_date: null,
+  camp_location: null,
+  camp_name: null,
+  camp_end_date: null,
+  camp_total_price: null,
+  camp_reservation_id: null,
+  camp_id: null
+});
+
+const loading = ref(false);
+const hasReservation = computed(() => {
+  return Object.keys(campReservations.value).length > 0;
+});
+
+// 合同文本
+const contractText = `第一条 租赁内容
+
+甲方同意将其拥有的营地（以下简称"营地"）租赁给乙方使用，乙方同意按照合同约定的条件租赁该营地。
 
 第四条 设施及使用
 	1.	甲方提供以下设施：
@@ -69,35 +169,10 @@
 
 第十一条 其他
 	1.	本合同自双方签字盖章之日起生效；
-	2.	本合同一式两份，甲乙双方各执一份，具有同等法律效力。</span>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleRent">租赁</el-button>
-          <el-button type="danger" @click="dialogVisible = false">取消</el-button>
-        </el-form-item>
-      </el-form>
-    </el-dialog>
-  </div>
-</template>
-
-<script setup>
-import { ref, onMounted } from 'vue';
-import { campApi } from '../../api/user/camp.js'
-import { ElMessage } from 'element-plus'
-import { errorHandler } from '../../utils/errorHandler.js'
-import { payApi } from '../../api/user/pay.js'
-
-const campReservations = ref({
-  camp_start_date: null,
-  camp_location: null,
-  camp_name: null,
-  camp_end_date: null,
-  camp_total_price: null,
-  camp_reservation_id: null,
-  camp_id: null
-});
+	2.	本合同一式两份，甲乙双方各执一份，具有同等法律效力。`;
 
 const getCampReservations = async () => {
+  loading.value = true;
   try {
     const res = await campApi.checkBookedCampground();
     if(res.code === 200){
@@ -114,6 +189,8 @@ const getCampReservations = async () => {
     }
   } catch (error) {
     errorHandler.showError("查看营地失败",error);
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -130,6 +207,8 @@ const handleRent = async () => {
       ElMessage.success("租赁营地成功");
       dialogVisible.value = false;
       await getCampReservations();
+    }else if(res.code === 421){
+      ElMessage.warning("用户余额不足");
     }else{
       errorHandler.showError("租赁营地失败",res);
     }
@@ -183,7 +262,6 @@ const handleRefund = async () => {
 // 租赁弹窗
 const dialogVisible = ref(false);
 
-
 // 根据时间戳转换为日期
 const formatDate = (timestamp) => {
   return new Date(timestamp).toLocaleDateString();
@@ -199,8 +277,101 @@ onMounted(() => {
   padding: 20px;
 }
 
-.content-placeholder {
-  margin-top: 20px;
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.reservation-content {
   min-height: 300px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+}
+
+.reservation-form {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.location-info,
+.time-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #606266;
+}
+
+.price {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f56c6c;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #ebeef5;
+}
+
+.rental-dialog {
+  :deep(.el-dialog__body) {
+    padding: 20px 30px;
+  }
+}
+
+.contract-content {
+  .contract-title {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #303133;
+  }
+
+  .contract-text {
+    color: #606266;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    padding: 0 10px;
+  }
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 20px;
+}
+
+:deep(.el-descriptions__label) {
+  font-weight: 500;
+}
+
+:deep(.el-button) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+:deep(.el-tag) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+}
+
+:deep(.el-descriptions__cell) {
+  padding: 16px 24px;
 }
 </style> 

@@ -1,98 +1,184 @@
 <template>
-  <!-- 搜索 -->
-    <div>
-        <el-form :inline="true" :model="searchForm" class="search-form">
-            <el-form-item>
-                <el-select style="width: 200px;" v-model="searchForm.status" placeholder="请选择状态" clearable>
-                    <el-option label="可预定" :value="CAMP_CONSTANT_DATA.AVAILABLE" />
-                    <el-option label="租赁中" :value="CAMP_CONSTANT_DATA.BOOKED" />
-                    <el-option label="维护中" :value="CAMP_CONSTANT_DATA.MAINTENANCE" />
-                </el-select>
-            </el-form-item>
-            <el-form-item>
-                <el-input style="width: 200px;" v-model="searchForm.name" placeholder="请输入名称" clearable />
-            </el-form-item>
-            <el-form-item>
-                <el-input style="width: 200px;" v-model="searchForm.location" placeholder="请输入地址" clearable />
-            </el-form-item>
-            <el-form-item>
-                <el-input-number 
-                    style="width: 200px;"
-                    v-model="searchForm.price" 
-                    placeholder="请输入价格"
-                    :min="0"
-                    :max="100000000"
-                    clearable
-                />
-            </el-form-item>
-            <el-form-item>
-                <el-button type="primary" @click="handleSearchClick">搜索</el-button>
-                <el-button @click="handleReset">
-                  <el-icon>
-                    <Refresh />
-                  </el-icon>
-                </el-button>
-            </el-form-item>
-        </el-form>
-    </div>
-    <!-- 表格 -->
-    <div>
-        <el-table :data="campCurrentPageData" style="width: 100%" border>
-          <el-table-column label="营地名称" min-width="120px">
-              <template #default="{ row }">
-                {{ row.campgroundName }}
-              </template>
-          </el-table-column>
-          <el-table-column label="营地图片" min-width="120px">
-            <template #default="{ row }">
-              <el-carousel 
-                v-if="getImages(row.campgroundPicture).length"
-                height="100px"
-                indicator-position="none"
-              >
-                <el-carousel-item v-for="image in getImages(row.campgroundPicture)" :key="image">
-                  <el-image 
-                    :src="getCampImageUrl(image)" 
-                    style="width: 100px; height: 100px;" 
-                    fit="cover"
-                  />
-                </el-carousel-item>
-              </el-carousel>
+  <div class="booking-camp-container">
+    <!-- 搜索区域 -->
+    <el-card class="search-card" shadow="hover">
+      <template #header>
+        <div class="search-header">
+          <span class="search-title">
+            <el-icon><Location /></el-icon>
+            营地筛选
+          </span>
+        </div>
+      </template>
+      <el-form :inline="true" :model="searchForm" class="search-form">
+        <el-form-item>
+          <el-select 
+            style="width: 200px;" 
+            v-model="searchForm.status" 
+            placeholder="营地状态"
+            clearable
+          >
+            <el-option label="可预定" :value="CAMP_CONSTANT_DATA.AVAILABLE">
+              <el-icon color="#67C23A"><CircleCheck /></el-icon>
+              <span style="margin-left: 6px">可预定</span>
+            </el-option>
+            <el-option label="租赁中" :value="CAMP_CONSTANT_DATA.BOOKED">
+              <el-icon color="#E6A23C"><Timer /></el-icon>
+              <span style="margin-left: 6px">租赁中</span>
+            </el-option>
+            <el-option label="维护中" :value="CAMP_CONSTANT_DATA.MAINTENANCE">
+              <el-icon color="#F56C6C"><Tools /></el-icon>
+              <span style="margin-left: 6px">维护中</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-input 
+            style="width: 200px;" 
+            v-model="searchForm.name" 
+            placeholder="营地名称"
+            clearable
+          >
+            <template #prefix>
+              <el-icon><House /></el-icon>
             </template>
-          </el-table-column>
-          <el-table-column label="营地价格" min-width="120px">
-              <template #default="{ row }">
-                {{ row.campgroundPrice }}
-              </template>
-          </el-table-column>  
-          <el-table-column label="营地地址" min-width="120px">
-              <template #default="{ row }">
-                {{ row.campgroundLocation }}
-              </template>
-          </el-table-column>
-          <el-table-column label="营地描述" min-width="120px">
-              <template #default="{ row }">
-                {{ row.campgroundFacilityDetails }}
-              </template>
-          </el-table-column>
-          <el-table-column label="营地状态" min-width="120px">
-              <template #default="{ row }">
-                {{ row.campgroundStatus === CAMP_CONSTANT_DATA.AVAILABLE ? "可预定" : row.campgroundStatus === CAMP_CONSTANT_DATA.BOOKED ? "租赁中" : "维护中" }}
-                <el-button type="primary" @click="handleBookingClick(row)" v-if="row.campgroundStatus === CAMP_CONSTANT_DATA.AVAILABLE">预定</el-button>
-              </template>
-          </el-table-column>
-        </el-table>
-    </div>
-    <!-- 分页 -->
-    <div>
-      <SmartPagination
-        v-model:current-page="campPagination.currentPage"
-        :server-page-size="campPagination.serverPageSize"
-        :display-page-size="campPagination.displayPageSize"
-        :total="campPagination.totalItems"
-        @load-data="handleCampLoadData" />
-    </div>
-    <el-dialog v-model="bookingDialogVisible" title="预定营地" width="30%" @close="handleBookingCancel">
+          </el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-input 
+            style="width: 200px;" 
+            v-model="searchForm.location" 
+            placeholder="营地地址"
+            clearable
+          >
+            <template #prefix>
+              <el-icon><MapLocation /></el-icon>
+            </template>
+          </el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-input-number 
+            style="width: 200px;"
+            v-model="searchForm.price" 
+            placeholder="最高价格"
+            :min="0"
+            :max="100000000"
+            clearable
+          >
+            <template #prefix>
+              <el-icon><Money /></el-icon>
+            </template>
+          </el-input-number>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleSearchClick">
+            <el-icon><Search /></el-icon>
+            搜索
+          </el-button>
+          <el-button @click="handleReset">
+            <el-icon><Refresh /></el-icon>
+            重置
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <!-- 表格区域 -->
+    <el-card class="table-card" shadow="hover">
+      <el-table 
+        :data="campCurrentPageData" 
+        style="width: 100%" 
+        border
+        v-loading="loading"
+        row-class-name="table-row"
+      >
+        <el-table-column label="营地名称" min-width="150px" align="center">
+          <template #default="{ row }">
+            <div class="camp-name">
+              <el-icon><House /></el-icon>
+              <span>{{ row.campgroundName }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="营地图片" min-width="120px" align="center">
+          <template #default="{ row }">
+            <el-carousel 
+              v-if="getImages(row.campgroundPicture).length"
+              height="120px"
+              indicator-position="none"
+              :interval="4000"
+              class="image-carousel"
+            >
+              <el-carousel-item v-for="image in getImages(row.campgroundPicture)" :key="image">
+                <el-image 
+                  :src="getCampImageUrl(image)" 
+                  fit="cover"
+                  class="camp-image"
+                  :preview-src-list="getImages(row.campgroundPicture).map(img => getCampImageUrl(img))"
+                />
+              </el-carousel-item>
+            </el-carousel>
+          </template>
+        </el-table-column>
+        <el-table-column label="营地价格" min-width="120px" align="center">
+          <template #default="{ row }">
+            <span class="price">¥ {{ row.campgroundPrice }}/天</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="营地地址" min-width="200px" show-overflow-tooltip>
+          <template #default="{ row }">
+            <div class="location">
+              <el-icon><Location /></el-icon>
+              <span>{{ row.campgroundLocation }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="营地设施" min-width="200px" show-overflow-tooltip>
+          <template #default="{ row }">
+            <el-text class="description">{{ row.campgroundFacilityDetails }}</el-text>
+          </template>
+        </el-table-column>
+        <el-table-column label="营地状态" min-width="120px" align="center">
+          <template #default="{ row }">
+            <div class="status-column">
+              <el-tag :type="getStatusType(row.campgroundStatus)">
+                {{ getStatusText(row.campgroundStatus) }}
+              </el-tag>
+              <el-button 
+                v-if="row.campgroundStatus === CAMP_CONSTANT_DATA.AVAILABLE"
+                type="primary" 
+                @click="handleBookingClick(row)"
+                class="booking-button"
+              >
+                <el-icon><Calendar /></el-icon>
+                预定
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-container">
+        <SmartPagination
+          v-model:current-page="campPagination.currentPage"
+          :server-page-size="campPagination.serverPageSize"
+          :display-page-size="campPagination.displayPageSize"
+          :total="campPagination.totalItems"
+          @load-data="handleCampLoadData" 
+        />
+      </div>
+    </el-card>
+
+    <!-- 预定对话框 -->
+    <el-dialog 
+      v-model="bookingDialogVisible" 
+      title="预定营地" 
+      width="500px" 
+      @close="handleBookingCancel"
+      destroy-on-close
+      class="booking-dialog"
+    >
       <el-form :model="bookingForm" label-width="120px">
         <el-form-item label="开始时间">
           <el-date-picker
@@ -101,6 +187,7 @@
             placeholder="选择开始日期"
             @change="calculateTotalPrice"
             clearable
+            class="date-picker"
           />
         </el-form-item>
         <el-form-item label="结束时间">
@@ -110,22 +197,29 @@
             placeholder="选择结束日期"
             @change="calculateTotalPrice"
             clearable
+            class="date-picker"
           />
         </el-form-item>
         <el-form-item label="总价">
           <el-input
             v-model="bookingForm.campgroundTotalPrice"
             disabled
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleBooking">预定</el-button>
-          <el-button @click="handleBookingCancel">取消</el-button>
+            class="total-price"
+          >
+            <template #prefix>¥</template>
+          </el-input>
         </el-form-item>
       </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="handleBookingCancel">取消</el-button>
+          <el-button type="primary" @click="handleBooking">确认预定</el-button>
+        </div>
+      </template>
     </el-dialog>
-  </template>
-  
+  </div>
+</template>
+
 <script setup>
 import { ref } from 'vue'
 import { CAMP_CONSTANT_DATA } from '../../constant/CampConstantData'
@@ -134,6 +228,7 @@ import SmartPagination from '../../components/SmartPagination.vue'
 import {errorHandler} from "../../utils/errorHandler.js";
 import { campApi } from '../../api/user/camp.js'
 import { ElMessage } from 'element-plus'
+import { Search, Location, House, MapLocation, Money, Calendar, CircleCheck, Timer, Tools } from '@element-plus/icons-vue'
 
 //===============================数据========================================
 const searchForm = ref({
@@ -157,6 +252,7 @@ const handleSearchClick = async  () => {
   await handleSearch()
 }
 const handleSearch = async () => {
+  loading.value = true
   try {
     const requestData = {
       campground: {
@@ -180,6 +276,8 @@ const handleSearch = async () => {
     }
   } catch (error) {
     errorHandler.showError("搜索营地失败",error)
+  } finally {
+    loading.value = false
   }
 }
 const handleReset = () => {
@@ -302,7 +400,158 @@ const getTimestamp = (date) => {
   return Math.floor(new Date(new Date(date)).getTime())
 }
 
+// 新增状态相关的工具函数
+const getStatusType = (status) => {
+  switch(status) {
+    case CAMP_CONSTANT_DATA.AVAILABLE:
+      return 'success'
+    case CAMP_CONSTANT_DATA.BOOKED:
+      return 'warning'
+    case CAMP_CONSTANT_DATA.MAINTENANCE:
+      return 'danger'
+    default:
+      return 'info'
+  }
+}
+
+const getStatusText = (status) => {
+  switch(status) {
+    case CAMP_CONSTANT_DATA.AVAILABLE:
+      return '可预定'
+    case CAMP_CONSTANT_DATA.BOOKED:
+      return '租赁中'
+    case CAMP_CONSTANT_DATA.MAINTENANCE:
+      return '维护中'
+    default:
+      return '未知'
+  }
+}
+
+// 添加loading状态
+const loading = ref(false)
+
 </script>
-  
-  <style scoped>
-  </style>
+
+<style scoped>
+.booking-camp-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.search-card {
+  background: white;
+  border-radius: 8px;
+}
+
+.search-header {
+  display: flex;
+  align-items: center;
+}
+
+.search-title {
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.table-card {
+  background: white;
+  border-radius: 8px;
+}
+
+.table-row {
+  transition: all 0.3s ease;
+}
+
+.table-row:hover {
+  background-color: #f5f7fa;
+}
+
+.camp-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.image-carousel {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.camp-image {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.price {
+  font-size: 16px;
+  font-weight: 600;
+  color: #f56c6c;
+}
+
+.location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #606266;
+}
+
+.description {
+  color: #606266;
+  font-size: 14px;
+}
+
+.status-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.booking-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.booking-dialog {
+  .date-picker {
+    width: 100%;
+  }
+
+  .total-price {
+    font-weight: 600;
+    color: #f56c6c;
+  }
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 20px;
+}
+
+:deep(.el-dialog__body) {
+  padding: 20px 40px;
+}
+</style>

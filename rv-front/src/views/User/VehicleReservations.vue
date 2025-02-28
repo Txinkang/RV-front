@@ -1,45 +1,149 @@
 <template>
-  <div class="camp-reservations">
-    <h2>已预定车辆</h2>
-    <div class="content-placeholder">
-      <el-form :model="vehicleReservations" label-width="80px" class="user-form">
-        <el-form-item label="车辆类型">
-          <el-input v-model="vehicleReservations.vehicle_type" :disabled="true"></el-input>
-        </el-form-item>
-        <el-form-item label="车辆地址">
-          <el-input v-model="vehicleReservations.vehicle_location" :disabled="true"></el-input>
-        </el-form-item>
-        <el-form-item label="开始时间">
-          <el-input v-model="vehicleReservations.vehicle_start_date" :disabled="true"></el-input>
-        </el-form-item>
-        <el-form-item label="结束时间">
-          <el-input v-model="vehicleReservations.vehicle_end_date" :disabled="true"></el-input>
-        </el-form-item>
-        <el-form-item label="总价">
-          <el-input v-model="vehicleReservations.vehicle_total_price" :disabled="true"></el-input>
-        </el-form-item>
-        <el-form-item v-if="vehicleReservations.vehicle_status === 2" label="更新位置">
-          <el-button type="primary" @click="handleUpdateLocation">更新</el-button>
-        </el-form-item>
-        <el-form-item v-if="vehicleReservations.vehicle_status === 0">
-          <el-button type="primary" @click="dialogVisible = true">付款</el-button>
-          <el-button type="danger" @click="handleCancel">取消</el-button>
-        </el-form-item>
-        <el-form-item v-if="vehicleReservations.vehicle_status === 2">
-          <el-button type="primary" @click="handleRefund">退款</el-button>
-        </el-form-item>
+  <div class="vehicle-reservations">
+    <div class="page-header">
+      <el-icon><Van /></el-icon>
+      <h2>已预定车辆</h2>
+    </div>
+
+    <div class="reservation-content" v-loading="loading">
+      <el-empty v-if="!hasReservation" description="暂无预订信息" />
+      
+      <el-form 
+        v-else
+        :model="vehicleReservations" 
+        label-width="100px" 
+        class="reservation-form"
+      >
+        <el-descriptions :column="1" border>
+          <el-descriptions-item label="车辆类型">
+            <el-tag :type="vehicleReservations.vehicle_type === '自行式' ? 'success' : 'warning'" size="large">
+              <el-icon>
+                <component :is="vehicleReservations.vehicle_type === '自行式' ? 'Van' : 'TakeawayBox'" />
+              </el-icon>
+              {{ vehicleReservations.vehicle_type }}
+            </el-tag>
+          </el-descriptions-item>
+          
+          <el-descriptions-item label="车辆位置">
+            <div class="location-info">
+              <el-icon><Location /></el-icon>
+              {{ vehicleReservations.vehicle_location }}
+            </div>
+          </el-descriptions-item>
+          
+          <el-descriptions-item label="开始时间">
+            <div class="time-info">
+              <el-icon><Timer /></el-icon>
+              {{ vehicleReservations.vehicle_start_date }}
+            </div>
+          </el-descriptions-item>
+          
+          <el-descriptions-item label="结束时间">
+            <div class="time-info">
+              <el-icon><Timer /></el-icon>
+              {{ vehicleReservations.vehicle_end_date }}
+            </div>
+          </el-descriptions-item>
+          
+          <el-descriptions-item label="总价">
+            <span class="price">¥ {{ vehicleReservations.vehicle_total_price }}</span>
+          </el-descriptions-item>
+        </el-descriptions>
+
+        <div class="action-buttons">
+          <template v-if="vehicleReservations.vehicle_status === 0">
+            <el-button type="primary" @click="dialogVisible = true">
+              <el-icon><Wallet /></el-icon>
+              付款
+            </el-button>
+            <el-button type="danger" @click="handleCancel">
+              <el-icon><Close /></el-icon>
+              取消预订
+            </el-button>
+          </template>
+          
+          <template v-if="vehicleReservations.vehicle_status === 2">
+            <el-button type="primary" @click="handleUpdateLocation">
+              <el-icon><MapLocation /></el-icon>
+              更新位置
+            </el-button>
+            <el-button type="warning" @click="handleRefund">
+              <el-icon><RefreshLeft /></el-icon>
+              申请退款
+            </el-button>
+          </template>
+        </div>
       </el-form>
     </div>
-    <el-dialog v-model="dialogVisible" title="租赁营地" width="30%">
-      <el-form :model="dialogForm" label-width="80px" class="user-form">
-        <el-form-item label="租赁合同">
-          <span>第一条 租赁内容
 
-甲方同意将其拥有的车辆（以下简称“车辆”）租赁给乙方使用，乙方同意按照合同约定的条件租赁该车辆。
+    <el-dialog 
+      v-model="dialogVisible" 
+      title="租赁合同确认" 
+      width="50%"
+      class="rental-dialog"
+    >
+      <div class="contract-content">
+        <h3 class="contract-title">车辆租赁合同</h3>
+        <el-scrollbar height="400px">
+          <div class="contract-text">
+            {{ contractText }}
+          </div>
+        </el-scrollbar>
+      </div>
+      
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false">
+            <el-icon><Close /></el-icon>
+            取消
+          </el-button>
+          <el-button type="primary" @click="handleRent">
+            <el-icon><Check /></el-icon>
+            确认租赁
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, computed } from 'vue';
+import { vehicleApi } from '../../api/user/vehicle.js'
+import { ElMessage } from 'element-plus'
+import { errorHandler } from '../../utils/errorHandler.js'
+import { payApi } from '../../api/user/pay.js'
+import { 
+  Van, TakeawayBox, Location, Timer, Wallet, 
+  Close, RefreshLeft, Check, MapLocation 
+} from '@element-plus/icons-vue'
+
+const vehicleReservations = ref({
+  vehicle_end_date: null,
+  vehicle_start_date: null,
+  vehicle_reservation_id: null,
+  vehicle_type: null,
+  vehicle_location: null,
+  vehicle_status: null,
+  vehicle_total_price: null,
+  vehicle_id: null
+});
+const geolocation = ref(null);
+
+const loading = ref(false);
+const hasReservation = computed(() => {
+  return Object.keys(vehicleReservations.value).length > 0;
+});
+
+// 合同文本
+const contractText = `第一条 租赁内容
+
+甲方同意将其拥有的车辆（以下简称"车辆"）租赁给乙方使用，乙方同意按照合同约定的条件租赁该车辆。
 
 第四条 设施及使用
 	1.	甲方提供以下设施：
-	•	车辆；
+	•	电力、供水、供暖等基本设施；
+	•	垃圾处理和清洁服务；
 	•	其他 [具体设施或服务]。
 	2.	乙方应合理使用车辆及其设施，保持车辆环境的清洁和卫生，禁止擅自改变车辆的结构、设施或用作非预定用途。
 
@@ -71,37 +175,9 @@
 
 第十一条 其他
 	1.	本合同自双方签字盖章之日起生效；
-	2.	本合同一式两份，甲乙双方各执一份，具有同等法律效力。</span>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleRent">付款</el-button>
-          <el-button type="danger" @click="dialogVisible = false">取消</el-button>
-        </el-form-item>
-      </el-form>
-    </el-dialog>
-  </div>
-</template>
-
-<script setup>
-import { ref, onMounted } from 'vue';
-import { vehicleApi } from '../../api/user/vehicle.js'
-import { ElMessage } from 'element-plus'
-import { errorHandler } from '../../utils/errorHandler.js'
-import { payApi } from '../../api/user/pay.js'
-
-const vehicleReservations = ref({
-  vehicle_end_date: null,
-  vehicle_start_date: null,
-  vehicle_reservation_id: null,
-  vehicle_type: null,
-  vehicle_location: null,
-  vehicle_status: null,
-  vehicle_total_price: null,
-  vehicle_id: null
-});
-const geolocation = ref(null);
-
+	2.	本合同一式两份，甲乙双方各执一份，具有同等法律效力。`;
 const getVehicleReservations = async () => {
+  loading.value = true;
   try {
     const res = await vehicleApi.checkBookedVehicle();
     if(res.code === 200){
@@ -119,6 +195,8 @@ const getVehicleReservations = async () => {
     }
   } catch (error) {
     errorHandler.showError("查看车辆失败",error);
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -135,6 +213,8 @@ const handleRent = async () => {
       ElMessage.success("租赁车辆成功");
       dialogVisible.value = false;
       await getVehicleReservations();
+    }else if(res.code === 421){
+      ElMessage.warning("用户余额不足");
     }else{
       errorHandler.showError("租赁车辆失败",res);
     }
@@ -188,6 +268,10 @@ const handleRefund = async () => {
 // 更新位置
 const handleUpdateLocation = async () => {
   try {
+    if(vehicleReservations.value.vehicle_start_date > formatDate(new Date())){
+      ElMessage.warning("未到开始时间");
+      return;
+    } 
     await getLocation();
     console.log("更新位置",vehicleReservations.value.vehicle_location);
     const requestData = {
@@ -284,12 +368,105 @@ const getLocation = () => {
 </script>
 
 <style scoped>
-.camp-reservations {
+.vehicle-reservations {
   padding: 20px;
 }
 
-.content-placeholder {
-  margin-top: 20px;
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.reservation-content {
   min-height: 300px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+}
+
+.reservation-form {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.location-info,
+.time-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #606266;
+}
+
+.price {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f56c6c;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #ebeef5;
+}
+
+.rental-dialog {
+  :deep(.el-dialog__body) {
+    padding: 20px 30px;
+  }
+}
+
+.contract-content {
+  .contract-title {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #303133;
+  }
+
+  .contract-text {
+    color: #606266;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    padding: 0 10px;
+  }
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 20px;
+}
+
+:deep(.el-descriptions__label) {
+  font-weight: 500;
+}
+
+:deep(.el-button) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+:deep(.el-tag) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+}
+
+:deep(.el-descriptions__cell) {
+  padding: 16px 24px;
 }
 </style> 

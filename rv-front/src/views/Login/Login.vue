@@ -1,113 +1,197 @@
 <template>
     <div class="login-container">
         <div class="login-box">
-            <h2 class="login-title">登录页面</h2>
-            <el-tabs v-model="activeName" @tab-click="handleTabClick">
-                <el-tab-pane label="账号登录">
-                    <el-form :model="accountLoginForm" label-width="80px">
-                        <el-form-item label="账号">
+            <div class="login-header">
+                <el-icon class="logo-icon"><Key /></el-icon>
+                <h2 class="login-title">欢迎登录</h2>
+                <p class="login-subtitle">房车露营预订平台</p>
+            </div>
+
+            <el-tabs v-model="activeName" class="login-tabs">
+                <el-tab-pane label="账号登录" name="account">
+                    <el-form :model="accountLoginForm" class="login-form">
+                        <el-form-item>
                             <el-input
                             v-model="accountLoginForm.userName"
+                            :prefix-icon="User"
                             placeholder="请输入用户账号"
                             clearable
                             size="large"
                             ></el-input>
                         </el-form-item>
-                        <el-form-item label="密码">
+                        <el-form-item>
                             <el-input
                             v-model="accountLoginForm.userPassword"
+                            :prefix-icon="Lock"
                             placeholder="请输入用户密码"
                             show-password
                             clearable
                             size="large"
                             ></el-input>
                         </el-form-item>
-                        <el-form-item label-position="left">
-                            <el-button size="large" type="default" @click="resetAccountLoginForm">
+                        <div class="form-actions">
+                            <el-button size="large" @click="resetAccountLoginForm">
+                                <el-icon><Refresh /></el-icon>
                                 重置
                             </el-button>
-                            <el-button type="primary" size="large" @click="submitAccountLoginForm" :disabled="!accountLoginForm.userName || !accountLoginForm.userPassword">
+                            <el-button 
+                            type="primary" 
+                            size="large" 
+                            @click="submitAccountLoginForm"
+                            :disabled="!accountLoginForm.userName || !accountLoginForm.userPassword"
+                            >
+                                <el-icon><Right /></el-icon>
                                 登录
                             </el-button>
-                        </el-form-item>
+                        </div>
                     </el-form>
                 </el-tab-pane>
-                <el-tab-pane label="手机号登录">
-                    <el-form :model="phoneLoginForm" label-width="80px">
-                        <el-form-item label="手机号">
+
+                <el-tab-pane label="手机号登录" name="phone">
+                    <el-form :model="phoneLoginForm" class="login-form">
+                        <el-form-item>
                             <el-input
                             v-model="phoneLoginForm.userPhoneNumber"
+                            :prefix-icon="Phone"
                             placeholder="请输入用户手机号"
                             clearable
                             size="large"
                             ></el-input>
                         </el-form-item>
-                        <el-form-item label="验证码">
+                        <el-form-item>
+                            <div class="code-input-group">
+                                <el-input
+                                v-model="phoneLoginForm.code"
+                                :prefix-icon="Message"
+                                placeholder="请输入验证码"
+                                clearable
+                                size="large"
+                                ></el-input>
+                                <el-button 
+                                type="primary" 
+                                size="large" 
+                                @click="getPhoneCode"
+                                :disabled="phoneLoginForm.codeTime > 0"
+                                >
+                                    {{ phoneLoginForm.codeTime > 0 ? `${phoneLoginForm.codeTime}s` : '获取验证码' }}
+                                </el-button>
+                            </div>
+                        </el-form-item>
+                        <div class="form-actions">
+                            <el-button size="large" @click="resetPhoneLoginForm">
+                                <el-icon><Refresh /></el-icon>
+                                重置
+                            </el-button>
+                            <el-button 
+                            type="primary" 
+                            size="large" 
+                            @click="submitPhoneLoginForm"
+                            :disabled="!phoneLoginForm.userPhoneNumber || !phoneLoginForm.code"
+                            >
+                                <el-icon><Right /></el-icon>
+                                登录
+                            </el-button>
+                        </div>
+                    </el-form>
+                </el-tab-pane>
+
+                <el-tab-pane label="邮箱登录" name="email">
+                    <el-form :model="emailLoginForm" class="login-form">
+                        <el-form-item>
                             <el-input
-                            v-model="phoneLoginForm.code"
-                            placeholder="请输入验证码"
+                            v-model="emailLoginForm.userEmail"
+                            :prefix-icon="Message"
+                            placeholder="请输入用户邮箱"
                             clearable
                             size="large"
                             ></el-input>
                         </el-form-item>
-                        <el-form-item label-position="left">
-                            <el-button size="large" type="default" @click="resetPhoneLoginForm">
+                        <el-form-item>
+                            <div class="code-input-group">
+                                <el-input
+                                v-model="emailLoginForm.code"
+                                :prefix-icon="Message"
+                                placeholder="请输入验证码"
+                                clearable
+                                size="large"
+                                ></el-input>
+                                <el-button 
+                                type="primary" 
+                                size="large" 
+                                @click="getEmailCode"
+                                :disabled="emailLoginForm.codeTime > 0"
+                                >
+                                    {{ emailLoginForm.codeTime > 0 ? `${emailLoginForm.codeTime}s` : '获取验证码' }}
+                                </el-button>
+                            </div>
+                        </el-form-item>
+                        <div class="form-actions">
+                            <el-button size="large" @click="resetEmailLoginForm">
+                                <el-icon><Refresh /></el-icon>
                                 重置
                             </el-button>
-                            <el-button type="primary" size="large" @click="submitPhoneLoginForm" :disabled="!phoneLoginForm.userPhoneNumber || !phoneLoginForm.code">
+                            <el-button 
+                            type="primary" 
+                            size="large" 
+                            @click="submitEmailLoginForm"
+                            :disabled="!emailLoginForm.userEmail || !emailLoginForm.code"
+                            >
+                                <el-icon><Right /></el-icon>
                                 登录
                             </el-button>
-                            <el-button type="primary" size="large" @click="getPhoneCode" :disabled="phoneLoginForm.codeTime > 0">
-                                获取验证码
-                            </el-button>
-                            <span class="code-time">{{ phoneLoginForm.codeTime }}秒</span>
-                        </el-form-item>
+                        </div>
                     </el-form>
                 </el-tab-pane>
-                <el-tab-pane label="邮箱登录">
-                    <el-form :model="emailLoginForm" label-width="80px">
-                        <el-form-item label="邮箱">
-                            <el-input v-model="emailLoginForm.userEmail" placeholder="请输入用户邮箱" clearable size="large"></el-input>
+
+                <el-tab-pane label="注册账号" name="register">
+                    <el-form :model="registerForm" class="login-form">
+                        <el-form-item>
+                            <el-input
+                            v-model="registerForm.userName"
+                            :prefix-icon="User"
+                            placeholder="请输入用户账号"
+                            clearable
+                            size="large"
+                            ></el-input>
                         </el-form-item>
-                        <el-form-item label="验证码">
-                            <el-input v-model="emailLoginForm.code" placeholder="请输入验证码" clearable size="large"></el-input>
+                        <el-form-item>
+                            <el-input
+                            v-model="registerForm.userPassword"
+                            :prefix-icon="Lock"
+                            placeholder="请输入用户密码"
+                            show-password
+                            clearable
+                            size="large"
+                            ></el-input>
                         </el-form-item>
-                        <el-form-item label-position="left">
-                            <el-button size="large" type="default" @click="resetEmailLoginForm">
-                                重置
-                            </el-button>
-                            <el-button type="primary" size="large" @click="submitEmailLoginForm" :disabled="!emailLoginForm.userEmail || !emailLoginForm.code">
-                                登录
-                            </el-button>
-                            <el-button type="primary" size="large" @click="getEmailCode" :disabled="emailLoginForm.codeTime > 0">
-                                获取验证码
-                            </el-button>
-                            <span class="code-time">{{ emailLoginForm.codeTime }}秒</span>
+                        <el-form-item>
+                            <el-input
+                            v-model="registerForm.userPhoneNumber"
+                            :prefix-icon="Phone"
+                            placeholder="请输入用户手机号"
+                            clearable
+                            size="large"
+                            ></el-input>
                         </el-form-item>
-                    </el-form>
-                </el-tab-pane>
-                <el-tab-pane label="注册账号">
-                    <el-form :model="registerForm" label-width="100px">
-                        <el-form-item label="用户账号">
-                            <el-input v-model="registerForm.userName" placeholder="请输入用户账号" clearable size="large"></el-input>
+                        <el-form-item>
+                            <el-input
+                            v-model="registerForm.userEmail"
+                            :prefix-icon="Message"
+                            placeholder="请输入用户邮箱"
+                            clearable
+                            size="large"
+                            ></el-input>
                         </el-form-item>
-                        <el-form-item label="用户密码">
-                            <el-input v-model="registerForm.userPassword" placeholder="请输入用户密码" show-password clearable size="large"></el-input>
-                        </el-form-item>
-                        <el-form-item label="用户手机号">
-                            <el-input v-model="registerForm.userPhoneNumber" placeholder="请输入用户手机号" clearable size="large"></el-input>
-                        </el-form-item>
-                        <el-form-item label="用户邮箱">
-                            <el-input v-model="registerForm.userEmail" placeholder="请输入用户邮箱" clearable size="large"></el-input>
-                        </el-form-item>
-                        <el-form-item label-position="left">
-                            <el-button size="large" type="default" @click="resetRegisterForm">
+                        <div class="form-actions">
+                            <el-button size="large" @click="resetRegisterForm">
+                                <el-icon><Refresh /></el-icon>
                                 重置
                             </el-button>
                             <el-button type="primary" size="large" @click="submitRegisterForm">
+                                <el-icon><Check /></el-icon>
                                 注册
                             </el-button>
-                        </el-form-item>
+                        </div>
                     </el-form>
                 </el-tab-pane>
             </el-tabs>
@@ -115,17 +199,20 @@
     </div>
 </template>
   <script setup>
-  import {reactive} from "vue";
+  import {ref, reactive} from "vue";
   import { useUserStore } from '../../store/user.js';
   import router from "../../router/index.js";
   import { errorHandler } from '../../utils/errorHandler.js';
   import { userApi } from '../../api/user/user.js';
   import { ElMessage } from 'element-plus';
-  defineOptions({
-    name: 'LoginView'
-  })
+  import {
+    Key, User, Lock, Phone, Message,
+    Refresh, Right, Check
+  } from '@element-plus/icons-vue'
 
   const userStore = useUserStore()
+
+  const activeName = ref('account')
 
   // 账号登录
   const accountLoginForm = reactive({
@@ -173,11 +260,11 @@
   const getPhoneCode = async () => {
     try {
         if(!phoneLoginForm.userPhoneNumber){
-            errorHandler.showError('请输入手机号')
+            ElMessage.warning('请输入手机号')
             return
         }
         if(phoneLoginForm.codeTime > 0){
-            errorHandler.showError('请稍后再试')
+            ElMessage.warning('请稍后再试')
             return
         }
         const requestData = {
@@ -245,11 +332,11 @@
   const getEmailCode = async () => {
     try {
         if(!emailLoginForm.userEmail){
-            errorHandler.showError('请输入邮箱')
+            ElMessage.warning('请输入邮箱')
             return
         }
         if(emailLoginForm.codeTime > 0){
-            errorHandler.showError('请稍后再试')
+            ElMessage.warning('请稍后再试')
             return
         }
         const requestData = {
@@ -354,30 +441,123 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    background: url('/src/assets/a.png') no-repeat center center fixed;
+    min-height: 100vh;
+    background: url('/src/assets/image.jpg') no-repeat center center fixed;
     background-size: cover;
+    position: relative;
   }
   
+  .login-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+  }
   
   .login-box {
-    width: 500px;
-    padding: 40px 20px;
-    background: #ffffff;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
+    position: relative;
+    width: 460px;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+  }
+  
+  .login-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .logo-icon {
+    font-size: 48px;
+    color: #409EFF;
+    margin-bottom: 16px;
   }
   
   .login-title {
-    font-size: 24px;
-    text-align: center;
+    font-size: 28px;
+    font-weight: 600;
+    color: #303133;
+    margin: 0 0 8px;
+  }
+  
+  .login-subtitle {
+    font-size: 16px;
+    color: #909399;
+    margin: 0;
+  }
+  
+  .login-tabs {
+    :deep(.el-tabs__nav-wrap::after) {
+      height: 1px;
+    }
+  
+    :deep(.el-tabs__active-bar) {
+      height: 3px;
+      border-radius: 3px;
+    }
+  }
+  
+  .login-form {
+    margin-top: 20px;
+  }
+  
+  .code-input-group {
+    display: flex;
+    gap: 12px;
+  
+    .el-input {
+      flex: 1;
+    }
+  
+    .el-button {
+      width: 120px;
+    }
+  }
+  
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 24px;
+    gap: 12px;
+  }
+  
+  :deep(.el-input__wrapper) {
+    box-shadow: 0 0 0 1px #dcdfe6 inset;
+  
+    &:hover {
+      box-shadow: 0 0 0 1px #c0c4cc inset;
+    }
+  
+    &.is-focus {
+      box-shadow: 0 0 0 1px #409EFF inset;
+    }
+  }
+  
+  :deep(.el-button) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-weight: 500;
+  }
+  
+  :deep(.el-form-item) {
     margin-bottom: 20px;
-    color: #333;
   }
   
-  .el-input {
-    font-size: 14px;
-  }
+  :deep(.el-tabs__item) {
+    font-size: 16px;
+    color: #606266;
   
+    &.is-active {
+      font-weight: 600;
+    }
+  }
   </style>
   

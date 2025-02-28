@@ -1,96 +1,217 @@
 <template>
   <div class="upload-container">
-    <el-tabs v-model="activeTab" type="card" >
-      <!-- 营地信息面板 -->
-      <el-tab-pane label="营地信息" name="camp">
-        <el-form :model="campForm" :rules="campRules" ref="campFormRef" label-width="100px">
-          <el-form-item label="营地名称" prop="name">
-            <el-input v-model="campForm.name" placeholder="请输入营地名称"></el-input>
-          </el-form-item>
-          
-          <el-form-item label="营地位置" prop="location">
-            <el-input v-model="campForm.location" placeholder="请输入营地位置"></el-input>
-          </el-form-item>
-          
-          <el-form-item label="营地价格" prop="price">
-            <el-input-number v-model="campForm.price" :min="0" :precision="2" :step="10" placeholder="请输入营地价格"></el-input-number>
-          </el-form-item>
-          
-          <el-form-item label="营地设备" prop="facilities">
-            <el-input type="textarea" v-model="campForm.facilities" placeholder="请输入营地设备信息"></el-input>
-          </el-form-item>
-          
-          <el-form-item label="营地图片" prop="pictures">
-            <el-upload
-              action="#"
-              list-type="picture-card"
-              :auto-upload="false"
-              :on-change="handleCampPictureChange"
-              :on-remove="handleCampPictureRemove"
-              multiple
-              accept="image/*"
-            >
-              <el-icon><Plus /></el-icon>
-            </el-upload>
-          </el-form-item>
-          
-          <el-form-item>
-            <el-button type="primary" @click="submitCampForm">上传审核</el-button>
-            <el-button @click="resetCampForm">取消</el-button>
-          </el-form-item>
-        </el-form>
-      </el-tab-pane>
-      
-      <!-- 车辆信息面板 -->
-      <el-tab-pane label="车辆信息" name="vehicle">
-        <el-form :model="vehicleForm" :rules="vehicleRules" ref="vehicleFormRef" label-width="100px">
-          <el-form-item label="车辆类型" prop="type">
-            <el-select v-model="vehicleForm.type" placeholder="请选择类型" clearable>
-                <el-option label="自行式" :value="VEHICLE_CONSTANT_DATA.TYPE_A" />
-                <el-option label="拖挂式" :value="VEHICLE_CONSTANT_DATA.TYPE_B" />
-            </el-select>
-          </el-form-item>
-          
-          <el-form-item label="车辆位置" prop="location">
-            <el-input v-model="vehicleForm.location" placeholder="请输入车辆位置"></el-input>
-          </el-form-item>
-          
-          <el-form-item label="车辆价格" prop="price">
-            <el-input-number v-model="vehicleForm.price" :min="0" :precision="2" :step="10" placeholder="请输入车辆价格"></el-input-number>
-          </el-form-item>
-          
-          <el-form-item label="车辆描述" prop="description">
-            <el-input type="textarea" v-model="vehicleForm.description" placeholder="请输入车辆描述"></el-input>
-          </el-form-item>
-          
-          <el-form-item label="车辆图片" prop="pictures">
-            <el-upload
-              action="#"
-              list-type="picture-card"
-              :auto-upload="false"
-              :on-change="handleVehiclePictureChange"
-              :on-remove="handleVehiclePictureRemove"
-              multiple
-              accept="image/*"
-            >
-              <el-icon><Plus /></el-icon>
-            </el-upload>
-          </el-form-item>
-          
-          <el-form-item>
-            <el-button type="primary" @click="submitVehicleForm">上传审核</el-button>
-            <el-button @click="resetVehicleForm">取消</el-button>
-          </el-form-item>
-        </el-form>
-      </el-tab-pane>
-    </el-tabs>
+    <el-card class="upload-card" shadow="hover">
+      <el-tabs v-model="activeTab" type="border-card" class="upload-tabs">
+        <!-- 营地信息面板 -->
+        <el-tab-pane name="camp">
+          <template #label>
+            <div class="tab-label">
+              <el-icon><Location /></el-icon>
+              <span>营地信息</span>
+            </div>
+          </template>
+          <el-form 
+            :model="campForm" 
+            :rules="campRules" 
+            ref="campFormRef" 
+            label-width="100px"
+            class="upload-form"
+          >
+            <el-form-item label="营地名称" prop="name">
+              <el-input 
+                v-model="campForm.name" 
+                placeholder="请输入营地名称"
+              >
+                <template #prefix>
+                  <el-icon><House /></el-icon>
+                </template>
+              </el-input>
+            </el-form-item>
+            
+            <el-form-item label="营地位置" prop="location">
+              <el-input 
+                v-model="campForm.location" 
+                placeholder="请输入营地位置"
+              >
+                <template #prefix>
+                  <el-icon><MapLocation /></el-icon>
+                </template>
+              </el-input>
+            </el-form-item>
+            
+            <el-form-item label="营地价格" prop="price">
+              <el-input-number 
+                v-model="campForm.price" 
+                :min="0" 
+                :precision="2" 
+                :step="10" 
+                placeholder="请输入营地价格"
+                class="price-input"
+              >
+                <template #prefix>
+                  <el-icon><Money /></el-icon>
+                </template>
+              </el-input-number>
+            </el-form-item>
+            
+            <el-form-item label="营地设备" prop="facilities">
+              <el-input 
+                type="textarea" 
+                v-model="campForm.facilities" 
+                placeholder="请输入营地设备信息"
+                :rows="4"
+                resize="none"
+              />
+            </el-form-item>
+            
+            <el-form-item label="营地图片" prop="pictures" class="upload-pictures">
+              <el-upload
+                ref="campPictureRef"
+                action="#"
+                list-type="picture-card"
+                :auto-upload="false"
+                :on-change="handleCampPictureChange"
+                :on-remove="handleCampPictureRemove"
+                multiple
+                accept="image/*"
+                class="upload-area"
+              >
+                <template #default>
+                  <div class="upload-trigger">
+                    <el-icon class="upload-icon"><Plus /></el-icon>
+                    <span class="upload-text">点击上传</span>
+                  </div>
+                </template>
+              </el-upload>
+            </el-form-item>
+            
+            <el-form-item class="form-buttons">
+              <el-button type="primary" @click="submitCampForm">
+                <el-icon><Upload /></el-icon>
+                上传审核
+              </el-button>
+              <el-button @click="resetCampForm">
+                <el-icon><RefreshRight /></el-icon>
+                重置
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+        
+        <!-- 车辆信息面板 -->
+        <el-tab-pane name="vehicle">
+          <template #label>
+            <div class="tab-label">
+              <el-icon><Van /></el-icon>
+              <span>车辆信息</span>
+            </div>
+          </template>
+          <el-form 
+            :model="vehicleForm" 
+            :rules="vehicleRules" 
+            ref="vehicleFormRef" 
+            label-width="100px"
+            class="upload-form"
+          >
+            <el-form-item label="车辆类型" prop="type">
+              <el-select 
+                v-model="vehicleForm.type" 
+                placeholder="请选择类型" 
+                clearable
+                class="type-select"
+              >
+                <el-option label="自行式" :value="VEHICLE_CONSTANT_DATA.TYPE_A">
+                  <el-icon><Van /></el-icon>
+                  <span style="margin-left: 8px">自行式</span>
+                </el-option>
+                <el-option label="拖挂式" :value="VEHICLE_CONSTANT_DATA.TYPE_B">
+                  <el-icon><TakeawayBox /></el-icon>
+                  <span style="margin-left: 8px">拖挂式</span>
+                </el-option>
+              </el-select>
+            </el-form-item>
+            
+            <el-form-item label="车辆位置" prop="location">
+              <el-input 
+                v-model="vehicleForm.location" 
+                placeholder="请输入车辆位置"
+              >
+                <template #prefix>
+                  <el-icon><Location /></el-icon>
+                </template>
+              </el-input>
+            </el-form-item>
+            
+            <el-form-item label="车辆价格" prop="price">
+              <el-input-number 
+                v-model="vehicleForm.price" 
+                :min="0" 
+                :precision="2" 
+                :step="10" 
+                placeholder="请输入车辆价格"
+                class="price-input"
+              >
+                <template #prefix>
+                  <el-icon><Money /></el-icon>
+                </template>
+              </el-input-number>
+            </el-form-item>
+            
+            <el-form-item label="车辆描述" prop="description">
+              <el-input 
+                type="textarea" 
+                v-model="vehicleForm.description" 
+                placeholder="请输入车辆描述"
+                :rows="4"
+                resize="none"
+              />
+            </el-form-item>
+            
+            <el-form-item label="车辆图片" prop="pictures" class="upload-pictures">
+              <el-upload
+                ref="vehiclePictureRef"
+                action="#"
+                list-type="picture-card"
+                :auto-upload="false"
+                :on-change="handleVehiclePictureChange"
+                :on-remove="handleVehiclePictureRemove"
+                multiple
+                accept="image/*"
+                class="upload-area"
+              >
+                <template #default>
+                  <div class="upload-trigger">
+                    <el-icon class="upload-icon"><Plus /></el-icon>
+                    <span class="upload-text">点击上传</span>
+                  </div>
+                </template>
+              </el-upload>
+            </el-form-item>
+            
+            <el-form-item class="form-buttons">
+              <el-button type="primary" @click="submitVehicleForm">
+                <el-icon><Upload /></el-icon>
+                上传审核
+              </el-button>
+              <el-button @click="resetVehicleForm">
+                <el-icon><RefreshRight /></el-icon>
+                重置
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+      </el-tabs>
+    </el-card>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { 
+  Location, House, MapLocation, Money, Upload, Plus, RefreshRight,
+  Van, TakeawayBox 
+} from '@element-plus/icons-vue'
 import { campApi } from '../../api/business/camp.js'
 import { vehicleApi } from '../../api/business/vehicle.js'
 import { errorHandler } from '../../utils/errorHandler.js'
@@ -107,6 +228,7 @@ const campForm = reactive({
   facilities: '',
   pictures: []
 })
+const campPictureRef = ref(null)
 
 // 营地表单验证规则
 const campRules = {
@@ -138,7 +260,7 @@ const vehicleForm = reactive({
   description: '',
   pictures: []
 })
-
+const vehiclePictureRef = ref(null)
 // 车辆表单验证规则
 const vehicleRules = {
   type: [
@@ -248,6 +370,7 @@ const submitCampForm = async () => {
 const resetCampForm = () => {
   campFormRef.value.resetFields()
   campForm.pictures = []
+  campPictureRef.value.clearFiles()
 }
 
 // 提交车辆表单
@@ -293,20 +416,115 @@ const submitVehicleForm = async () => {
 const resetVehicleForm = () => {
   vehicleFormRef.value.resetFields()
   vehicleForm.pictures = []
+  vehiclePictureRef.value.clearFiles()
 }
 </script>
 
 <style scoped>
 .upload-container {
   padding: 20px;
+  min-height: calc(100vh - 200px);
+  background-color: #f5f7fa;
 }
 
-.el-form {
-  max-width: 800px;
+.upload-card {
+  max-width: 900px;
   margin: 0 auto;
+  border-radius: 8px;
 }
 
-.el-input-number {
+.upload-tabs {
+  border: none;
+}
+
+.tab-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.upload-form {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+.price-input {
   width: 100%;
+}
+
+.type-select {
+  width: 100%;
+}
+
+.upload-pictures {
+  margin-bottom: 30px;
+}
+
+.upload-area {
+  :deep(.el-upload--picture-card) {
+    width: 148px;
+    height: 148px;
+    border-radius: 8px;
+    border: 1px dashed #d9d9d9;
+    transition: all 0.3s;
+
+    &:hover {
+      border-color: #409EFF;
+    }
+  }
+
+  :deep(.el-upload-list__item) {
+    border-radius: 8px;
+  }
+}
+
+.upload-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #8c939d;
+}
+
+.upload-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.upload-text {
+  font-size: 14px;
+}
+
+.form-buttons {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+:deep(.el-input-number) {
+  width: 100%;
+}
+
+:deep(.el-textarea__inner) {
+  font-family: inherit;
+}
+
+:deep(.el-tabs__nav) {
+  border-radius: 8px 8px 0 0;
+}
+
+:deep(.el-form-item__label) {
+  font-weight: 500;
+}
+
+:deep(.el-button) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 20px;
 }
 </style>

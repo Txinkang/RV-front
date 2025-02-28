@@ -1,183 +1,254 @@
 <template>
   <div class="vehicle-info">
-    <h2>车辆管理</h2>
-    <!-- 搜索 -->
-    <div>
-        <el-form :inline="true" :model="searchForm" class="search-form">
-            <el-form-item>
-                <el-select style="width: 200px;" v-model="searchForm.status" placeholder="请选择状态" clearable>
-                    <el-option label="可预定" :value="VEHICLE_CONSTANT_DATA.AVAILABLE" />
-                    <el-option label="租赁中" :value="VEHICLE_CONSTANT_DATA.BOOKED" />
-                    <el-option label="维护中" :value="VEHICLE_CONSTANT_DATA.MAINTENANCE" />
-                </el-select>
-            </el-form-item>
-            <el-form-item>
-                <el-select style="width: 200px;" v-model="searchForm.type" placeholder="请选择类型" clearable>
-                    <el-option label="自行式" :value="VEHICLE_CONSTANT_DATA.TYPE_A" />
-                    <el-option label="拖挂式" :value="VEHICLE_CONSTANT_DATA.TYPE_B" />
-                </el-select>
-            </el-form-item>
-            <el-form-item>
-                <el-input-number 
-                    style="width: 200px;"
-                    v-model="searchForm.price" 
-                    placeholder="请输入价格"
-                    :min="0"
-                    :max="100000000"
-                    clearable
-                />
-            </el-form-item>
-            <el-form-item>
-                <el-button type="primary" @click="handleSearchClick">搜索</el-button>
-                <el-button @click="handleReset">
-                  <el-icon>
-                    <Refresh />
-                  </el-icon>
-                </el-button>
-            </el-form-item>
-        </el-form>
+    <div class="page-header">
+      <h2>车辆管理</h2>
     </div>
-    <div class="content-placeholder">
-      <!-- 表格 -->
-      <div style="overflow-x: auto;">
+
+    <div class="content-wrapper">
+      <!-- 搜索区域 -->
+      <div class="search-section">
+        <el-form :inline="true" :model="searchForm" class="search-form">
+          <el-form-item>
+            <el-select 
+              v-model="searchForm.status" 
+              placeholder="车辆状态" 
+              clearable
+              class="search-input"
+            >
+              <el-option label="可预定" :value="VEHICLE_CONSTANT_DATA.AVAILABLE" />
+              <el-option label="租赁中" :value="VEHICLE_CONSTANT_DATA.BOOKED" />
+              <el-option label="维护中" :value="VEHICLE_CONSTANT_DATA.MAINTENANCE" />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-select 
+              v-model="searchForm.type" 
+              placeholder="车辆类型" 
+              clearable
+              class="search-input"
+            >
+              <el-option label="自行式" :value="VEHICLE_CONSTANT_DATA.TYPE_A" />
+              <el-option label="拖挂式" :value="VEHICLE_CONSTANT_DATA.TYPE_B" />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-input-number 
+              v-model="searchForm.price" 
+              placeholder="车辆价格"
+              :min="0"
+              :max="100000000"
+              class="search-input"
+              clearable
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleSearchClick">
+              <el-icon><Search /></el-icon>
+              搜索
+            </el-button>
+            <el-button @click="handleReset">
+              <el-icon><Refresh /></el-icon>
+              重置
+            </el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <!-- 表格区域 -->
+      <div class="table-section">
         <el-table 
-        :data="vehicleCurrentPageData" 
-        style="width: 1000px" 
-        border>
-          <el-table-column label="车辆类型" min-width="120px">
-              <template #default="{ row }">
+          :data="vehicleCurrentPageData" 
+          style="width: 100%" 
+          border
+          stripe
+          v-loading="loading"
+        >
+          <el-table-column label="车辆类型" min-width="100">
+            <template #default="{ row }">
+              <el-tag :type="row.vehicleType === VEHICLE_CONSTANT_DATA.TYPE_A ? 'success' : 'warning'">
                 {{ row.vehicleType === VEHICLE_CONSTANT_DATA.TYPE_A ? "自行式" : "拖挂式" }}
-              </template>
+              </el-tag>
+            </template>
           </el-table-column>
-          <el-table-column label="车辆图片" min-width="120px">
+
+          <el-table-column label="车辆图片" min-width="120">
             <template #default="{ row }">
               <el-carousel 
                 v-if="getImages(row.vehiclePicture).length"
-                height="100px"
+                height="120px"
                 indicator-position="none"
+                class="image-carousel"
               >
                 <el-carousel-item v-for="image in getImages(row.vehiclePicture)" :key="image">
                   <el-image 
                     :src="getVehicleImageUrl(image)" 
-                    style="width: 100px; height: 100px;" 
                     fit="cover"
+                    class="vehicle-image"
+                    :preview-src-list="[getVehicleImageUrl(image)]"
                   />
                 </el-carousel-item>
               </el-carousel>
             </template>
           </el-table-column>
-          <el-table-column label="车辆价格" min-width="120px">
-              <template #default="{ row }">
-                {{ row.vehiclePrice }}
-              </template>
-          </el-table-column>  
-          <el-table-column label="车辆地址" min-width="120px">
-              <template #default="{ row }">
-                {{ row.vehicleLocation }}
-              </template>
-          </el-table-column>
-          <el-table-column label="车辆描述" min-width="120px">
-              <template #default="{ row }">
-                {{ row.vehicleDescription }}
-              </template>
-          </el-table-column>
-          <el-table-column label="车辆状态" min-width="120px">
-              <template #default="{ row }">
-                {{ formatVehicleStatus(row.vehicleStatus) }}
-              </template>
-          </el-table-column>
-          <el-table-column label="操作" min-width="330px">
-              <template #default="{ row }">
-                <el-button type="primary" size="small" @click="handleUpdateClick(row.vehicleId)">修改</el-button>
-                <el-button type="warning" v-if="row.vehicleStatus !== 2" size="small" @click="handleMaintainClick(row.vehicleId)">维护</el-button>
-                <el-button type="warning" v-if="row.vehicleStatus === 2" size="small" @click="handleCancelMaintainClick(row.vehicleId)">取消维护</el-button>
-                <el-button type="warning" v-if="row.vehicleStatus === 2" size="small" @click="handleCompleteMaintainClick(row.vehicleId)">完成维护</el-button>
-                <el-button type="danger" size="small" @click="handleDeleteClick(row.vehicleId)">删除</el-button>
-              </template>
-          </el-table-column>
-          <el-table-column label="确认归还" min-width="120px">
+
+          <el-table-column label="车辆价格" min-width="100">
             <template #default="{ row }">
-              <el-button type="primary" size="small" @click="handleReturnClick(row.vehicleId)">确认归还</el-button>
+              <span class="price">¥{{ row.vehiclePrice }}</span>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="车辆地址" prop="vehicleLocation" min-width="150" show-overflow-tooltip />
+          
+          <el-table-column label="车辆描述" prop="vehicleDescription" min-width="200" show-overflow-tooltip />
+          
+          <el-table-column label="车辆状态" min-width="100">
+            <template #default="{ row }">
+              <el-tag :type="getVehicleStatusType(row.vehicleStatus)">
+                {{ formatVehicleStatus(row.vehicleStatus) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="操作" min-width="330" fixed="right">
+            <template #default="{ row }">
+              <el-space wrap>
+                <el-button type="primary" size="small" @click="handleUpdateClick(row.vehicleId)">
+                  <el-icon><Edit /></el-icon>修改
+                </el-button>
+                <el-button 
+                  v-if="row.vehicleStatus !== 2" 
+                  type="warning" 
+                  size="small" 
+                  @click="handleMaintainClick(row.vehicleId)"
+                >
+                  <el-icon><Tools /></el-icon>维护
+                </el-button>
+                <el-button 
+                  v-if="row.vehicleStatus === 2" 
+                  type="warning" 
+                  size="small" 
+                  @click="handleCancelMaintainClick(row.vehicleId)"
+                >
+                  <el-icon><Close /></el-icon>取消维护
+                </el-button>
+                <el-button 
+                  v-if="row.vehicleStatus === 2" 
+                  type="success" 
+                  size="small" 
+                  @click="handleCompleteMaintainClick(row.vehicleId)"
+                >
+                  <el-icon><Check /></el-icon>完成维护
+                </el-button>
+                <el-button type="danger" size="small" @click="handleDeleteClick(row.vehicleId)">
+                  <el-icon><Delete /></el-icon>删除
+                </el-button>
+                <el-button 
+                  type="success" 
+                  size="small" 
+                  @click="handleReturnClick(row.vehicleId)"
+                >
+                  <el-icon><Check /></el-icon>确认归还
+                </el-button>
+              </el-space>
             </template>
           </el-table-column>
         </el-table>
-      </div>  
-      
+      </div>
+
       <!-- 分页 -->
-      <div>
+      <div class="pagination-section">
         <SmartPagination
           v-model:current-page="vehiclePagination.currentPage"
           :server-page-size="vehiclePagination.serverPageSize"
           :display-page-size="vehiclePagination.displayPageSize"
           :total="vehiclePagination.totalItems"
-          @load-data="handleVehicleLoadData" />
+          @load-data="handleVehicleLoadData"
+        />
       </div>
 
-      <!-- 修改车辆信息 -->
-      <div>
-        <el-dialog title="修改车辆信息" v-model="vehicleUpdateDialogVisible" width="50%" @close="closeVehicleUpdateDialog">
-          <el-form :model="vehicleForm" label-width="100px">
-            <el-form-item label="车辆类型" prop="type">
-              <el-select v-model="vehicleForm.type" placeholder="请选择类型" clearable>
-                  <el-option label="自行式" :value="VEHICLE_CONSTANT_DATA.TYPE_A" />
-                  <el-option label="拖挂式" :value="VEHICLE_CONSTANT_DATA.TYPE_B" />
-              </el-select>
-            </el-form-item>
-            
-            <el-form-item label="车辆位置" prop="location">
-              <el-input v-model="vehicleForm.location" placeholder="请输入车辆位置"></el-input>
-            </el-form-item>
-            
-            <el-form-item label="车辆价格" prop="price">
-              <el-input-number v-model="vehicleForm.price" :min="0" :precision="2" :step="10" placeholder="车辆价格"></el-input-number>
-            </el-form-item>
-            
-            <el-form-item label="车辆描述" prop="description">
-              <el-input type="textarea" v-model="vehicleForm.description" placeholder="请输入车辆描述"></el-input>
-            </el-form-item>
-            
-            <el-form-item label="车辆图片" prop="pictures">
-              <el-upload
-                ref="vehicleFormRef"
-                action="#"
-                list-type="picture-card"
-                :auto-upload="false"
-                :on-change="handleVehiclePictureChange"
-                :on-remove="handleVehiclePictureRemove"
-                multiple
-                accept="image/*"
-              >
-                <el-icon><Plus /></el-icon>
-              </el-upload>
-            </el-form-item>
-            
-            <el-form-item>
-              <el-button type="primary" @click="updateVehicle">修改</el-button>
-              <el-button @click="closeVehicleUpdateDialog">取消</el-button>
-            </el-form-item>
+      <!-- 修改车辆信息对话框 -->
+      <el-dialog 
+        title="修改车辆信息" 
+        v-model="vehicleUpdateDialogVisible" 
+        width="600px"
+        destroy-on-close
+        @close="closeVehicleUpdateDialog"
+      >
+        <el-form :model="vehicleForm" label-width="100px" class="dialog-form">
+          <el-form-item label="车辆类型" prop="type">
+            <el-select v-model="vehicleForm.type" placeholder="请选择类型" style="width: 100%">
+              <el-option label="自行式" :value="VEHICLE_CONSTANT_DATA.TYPE_A" />
+              <el-option label="拖挂式" :value="VEHICLE_CONSTANT_DATA.TYPE_B" />
+            </el-select>
+          </el-form-item>
+          
+          <el-form-item label="车辆位置" prop="location">
+            <el-input v-model="vehicleForm.location" placeholder="请输入车辆位置" />
+          </el-form-item>
+          
+          <el-form-item label="车辆价格" prop="price">
+            <el-input-number 
+              v-model="vehicleForm.price" 
+              :min="0" 
+              :precision="2" 
+              :step="10" 
+              style="width: 100%"
+            />
+          </el-form-item>
+          
+          <el-form-item label="车辆描述" prop="description">
+            <el-input 
+              type="textarea" 
+              v-model="vehicleForm.description" 
+              :rows="4"
+              placeholder="请输入车辆描述"
+            />
+          </el-form-item>
+          
+          <el-form-item label="车辆图片" prop="pictures">
+            <el-upload
+              ref="vehicleFormRef"
+              action="#"
+              list-type="picture-card"
+              :auto-upload="false"
+              :on-change="handleVehiclePictureChange"
+              :on-remove="handleVehiclePictureRemove"
+              multiple
+              accept="image/*"
+            >
+              <el-icon><Plus /></el-icon>
+            </el-upload>
+          </el-form-item>
         </el-form>
-        </el-dialog>
-      </div>
+        <template #footer>
+          <el-button @click="closeVehicleUpdateDialog">取消</el-button>
+          <el-button type="primary" @click="updateVehicle">确认修改</el-button>
+        </template>
+      </el-dialog>
 
-      <!-- 维护车辆信息 -->
-      <div>
-        <el-dialog title="维护车辆信息" v-model="vehicleMaintainDialogVisible" width="50%" @close="closeVehicleMaintainDialog">
-          <el-form :model="vehicleForm" label-width="100px">
-            <el-form-item label="维护信息" prop="maintenanceDetails">
-              <el-input 
-                type="textarea" 
-                v-model="vehicleForm.maintenanceDetails" 
-                placeholder="请输入维护信息"
-                :autosize="{ minRows: 4, maxRows: 6 }"
-              />
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="maintainVehicle">维护</el-button>
-              <el-button @click="closeVehicleMaintainDialog">取消</el-button>
-            </el-form-item>
-          </el-form>
-        </el-dialog>
-      </div>
+      <!-- 维护车辆信息对话框 -->
+      <el-dialog 
+        title="维护车辆信息" 
+        v-model="vehicleMaintainDialogVisible" 
+        width="500px"
+        destroy-on-close
+        @close="closeVehicleMaintainDialog"
+      >
+        <el-form :model="vehicleForm" label-width="100px" class="dialog-form">
+          <el-form-item label="维护信息" prop="maintenanceDetails">
+            <el-input 
+              type="textarea" 
+              v-model="vehicleForm.maintenanceDetails" 
+              :rows="4"
+              placeholder="请输入维护信息"
+            />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="closeVehicleMaintainDialog">取消</el-button>
+          <el-button type="primary" @click="maintainVehicle">确认维护</el-button>
+        </template>
+      </el-dialog>
     </div>
   </div>
 </template>
@@ -190,6 +261,7 @@ import { vehicleApi } from '../../api/vehicle.js';
 import { errorHandler } from '../../utils/errorHandler';
 import { ElMessage } from 'element-plus';
 import { VEHICLE_CONSTANT_DATA } from '../../constant/VehicleConstantData'
+import { Search, Refresh, Edit, Tools, Close, Check, Delete, Plus } from '@element-plus/icons-vue'
 
 //===============================数据========================================
 const searchForm = ref({
@@ -216,6 +288,7 @@ const handleSearchClick = async  () => {
   await handleSearch()
 }
 const handleSearch = async () => {
+  loading.value = true
   try {
     const requestData = {
       vehicle: {
@@ -238,6 +311,8 @@ const handleSearch = async () => {
     }
   } catch (error) {
     errorHandler.showError("搜索车辆失败",error)
+  } finally {
+    loading.value = false
   }
 }
 const handleReset = () => {
@@ -487,14 +562,120 @@ const formatVehicleStatus = (status) => {
     return '已删除'
   }
 }
-</script>
-<style scoped>
-.vehicle-info {
-  padding: 20px;
+
+// 添加新的工具函数
+const getVehicleStatusType = (status) => {
+  const statusMap = {
+    0: 'success',   // 可预定
+    1: 'warning',   // 租赁中
+    2: 'info',      // 维护中
+    3: 'primary',   // 审核中
+    4: 'danger',    // 审核失败
+    5: 'danger'     // 已删除
+  }
+  return statusMap[status] || ''
 }
 
-.content-placeholder {
-  margin-top: 20px;
-  min-height: 300px;
+// 添加 loading 状态
+const loading = ref(false)
+</script>
+
+<style scoped>
+.vehicle-info {
+  height: 100%;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.content-wrapper {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.search-section {
+  padding: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.search-input {
+  width: 200px;
+}
+
+.table-section {
+  padding: 0 24px;
+}
+
+.pagination-section {
+  padding: 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.vehicle-image {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.image-carousel {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.price {
+  color: #f56c6c;
+  font-weight: 500;
+}
+
+.dialog-form {
+  padding: 20px 0;
+}
+
+:deep(.el-form-item__content) {
+  flex-wrap: nowrap;
+}
+
+:deep(.el-button--small) {
+  padding: 8px 16px;
+}
+
+:deep(.el-button--small .el-icon) {
+  margin-right: 4px;
+}
+
+:deep(.el-tag) {
+  text-align: center;
+  min-width: 80px;
+}
+
+/* 响应式布局 */
+@media screen and (max-width: 768px) {
+  .search-section {
+    padding: 16px;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .table-section {
+    padding: 0 16px;
+    overflow-x: auto;
+  }
+
+  .pagination-section {
+    padding: 16px;
+  }
 }
 </style> 
