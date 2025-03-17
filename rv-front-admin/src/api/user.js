@@ -1,4 +1,4 @@
-import request from '/Users/tangxinkang/Projects/RV/RV-front/rv-front-admin/src/api/config/request.js'
+import request from '../api/config/request.js'
 
 export default {
     // 登录

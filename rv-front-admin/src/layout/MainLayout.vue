@@ -47,7 +47,7 @@
   import { User, Van, Management, SwitchButton } from '@element-plus/icons-vue'
   import { useRouter, useRoute } from "vue-router";
   import { useUserStore } from '@/store/user.js'
-  import userApi from '/Users/tangxinkang/Projects/RV/RV-front/rv-front-admin/src/api/user.js'
+  import userApi from '@/api/user.js'
   import { errorHandler } from '@/utils/errorHandler.js'
   import { ElMessageBox, ElMessage } from 'element-plus'
 
