@@ -2,27 +2,25 @@ import request from '../config/request'
 
 export default {
     // 查看使用问题
-    questionsInfo(data){
+    questionsInfo(){
         return request({
-            url: '/user/questionsInfo',
+            url: '/admin/questionsInfo',
             method: 'get',
-            data: data
         })
     },
     // 提交使用问题
-    askQuestions(data){
+    answer(data){
         return request({
-            url: '/user/askQuestions',
+            url: '/admin/answer',
             method: 'post',
             data: data
         })
     },
     // 反馈
-    feedback(data){
+    getFeedback(){
         return request({
-            url: '/user/feedback',
-            method: 'post',
-            data: data
+            url: '/admin/getFeedback',
+            method: 'get',
         })
     }
 }

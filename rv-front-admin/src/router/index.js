@@ -7,6 +7,8 @@ import VehicleInfo from '../views/User/VehicleInfo.vue'
 import CampAudit from '../views/User/CampAudit.vue'
 import VehicleAudit from '../views/User/VehicleAudit.vue'
 import DataAnalyze from '../views/User/DataAnalyze.vue'
+import Question from '../views/User/Question.vue'
+import Feedback from '../views/User/Feedback.vue'
 const routes = [
   {
     path: '/login',
@@ -49,11 +51,23 @@ const routes = [
             meta: { title: '车辆审核' }
           },
           {
+            path: 'question',
+            name: 'question',
+            component: Question,
+            meta: { title: '问题跟踪' }
+          },
+          {
             path: 'data-analyze',
             name: 'data-analyze',
             component: DataAnalyze,
             meta: { title: '数据分析' }
-          },
+          }, 
+          {
+            path: 'feedback',
+            name: 'feedback',
+            component: Feedback,
+            meta: { title: '反馈' }
+          }
         ]
       }
     ]

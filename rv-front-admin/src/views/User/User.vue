@@ -27,6 +27,16 @@
           <span>车辆审核</span>
         </el-menu-item>
 
+        <el-menu-item index="/user/question">
+          <el-icon><Message /></el-icon>
+          <span>问题跟踪</span>
+        </el-menu-item>
+
+        <el-menu-item index="/user/feedback">
+          <el-icon><User /></el-icon>
+          <span>反馈</span>
+        </el-menu-item>
+
         <el-menu-item index="/user/data-analyze">
           <el-icon><TrendCharts /></el-icon>
           <span>数据分析</span>
@@ -42,7 +52,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Location, Van, Check, Document, TrendCharts } from '@element-plus/icons-vue'
+import { Location, Van, Check, Document, TrendCharts, Message, User } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()

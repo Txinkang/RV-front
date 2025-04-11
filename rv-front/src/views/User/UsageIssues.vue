@@ -40,6 +40,20 @@
             </template>
           </el-table-column>
 
+          <el-table-column label="问题回复" min-width="300">
+            <template #default="{ row }">
+              <div class="issue-content">
+                <el-tooltip 
+                  :content="row.userQuestionAnswer" 
+                  placement="top" 
+                  :hide-after="0"
+                >
+                  <span class="issue-text">{{ row.userQuestionAnswer }}</span>
+                </el-tooltip>
+              </div>
+            </template>
+          </el-table-column>
+
           <el-table-column label="提出日期" min-width="150">
             <template #default="{ row }">
               <div class="time-info">
