@@ -549,7 +549,8 @@ const getImages = (pictureStr) => {
   }
 }
 const getCampImageUrl = (filename) => {
-  return `http://localhost:8080/images/campgroundPictures/${filename}`
+  const url = import.meta.env.VITE_IMAGE_CAMP_BASE_URL
+  return `${url}/${filename}`
 }
 // 根据订单状态转换为中文
 const formatCampStatus = (status) => {

@@ -268,10 +268,10 @@ const handleRefund = async () => {
 // 更新位置
 const handleUpdateLocation = async () => {
   try {
-    if(vehicleReservations.value.vehicle_start_date > formatDate(new Date())){
-      ElMessage.warning("未到开始时间");
-      return;
-    } 
+    // if(vehicleReservations.value.vehicle_start_date > formatDate(new Date())){
+    //   ElMessage.warning("未到开始时间");
+    //   return;
+    // } 
     await getLocation();
     console.log("更新位置",vehicleReservations.value.vehicle_location);
     const requestData = {

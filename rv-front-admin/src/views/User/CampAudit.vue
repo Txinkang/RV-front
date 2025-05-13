@@ -130,8 +130,8 @@ const getImages = (pictureStr) => {
   }
 }
 const getCampImageUrl = (filename) => {
-  //return `http://localhost:8080/images/campgroundPictures/0c4bc107-77aa-49e1-9ad8-b92591c4a395.jpg`
-  return `http://localhost:8080/images/campgroundPictures/${filename}`
+  const url = import.meta.env.VITE_IMAGE_CAMP_BASE_URL
+  return `${url}/${filename}`
 }
 
 // 通过

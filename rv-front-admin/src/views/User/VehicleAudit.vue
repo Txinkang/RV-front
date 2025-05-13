@@ -190,7 +190,8 @@ const getImages = (pictureStr) => {
   }
 }
 const getVehicleImageUrl = (filename) => {
-  return `http://localhost:8080/images/vehiclePictures/${filename}`
+  const url = import.meta.env.VITE_IMAGE_VEHICLE_BASE_URL
+  return `${url}/${filename}`
 }
 </script>
 
